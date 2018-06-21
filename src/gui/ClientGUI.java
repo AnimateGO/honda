@@ -274,6 +274,11 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
             //ドキュメントにその属性情報つきの文字列を挿入
             document.insertString(document.getLength(), "[recv]"+text+"\n", attribute);
             
+            /*
+            
+            正規表現でパターンマッチング
+            動作確認なし
+            
             str = text;
             Matcher mc = resources.matcher(str);
             player_id = Integer.parseInt(mc.group(3));
@@ -290,15 +295,7 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                     i = i + 2;
                 }
             }        
-            
-    String str;
-    int player_id;
-    //各プレイヤーのArrayListの中身→　1番目：教授の数  2番目：助手の数　3番目：学生の数　4番目：お金の数　5番目：研究成果の数　6番目：負債の数
-    ArrayList player_0 = new ArrayList();
-    ArrayList player_1 = new ArrayList();
-    
-    Pattern resources = Pattern.compile("(211)\\s(.*)\\s(0|1)\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9]+)\\s(.)([0-9]+)\\s(.)([0-9]+)");
-            
+            */
             
             this.jTextPane1.setCaretPosition(document.getLength());
         } catch (BadLocationException ex) {
@@ -322,6 +319,10 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
 
     }
     
+    /*
+    
+    馬場が書きました
+    
     String str;
     int player_id;
     //各プレイヤーのArrayListの中身→　1番目：教授の数  2番目：助手の数　3番目：学生の数　4番目：お金の数　5番目：研究成果の数　6番目：負債の数
@@ -329,7 +330,7 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
     ArrayList player_1 = new ArrayList();
     
     Pattern resources = Pattern.compile("(211)\\s(.*)\\s(0|1)\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9]+)\\s(.)([0-9]+)\\s(.)([0-9]+)");
- 
+    */
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
