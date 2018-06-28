@@ -263,7 +263,10 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
         }
 
     }
-    
+
+    String playerId;
+    int professorVal = 1;
+    int studentVal = 1;
     /** 通信によって文字を取得したときに（だけ）呼び出される */
     @Override
     public void reciveMessage(String text){
@@ -274,9 +277,24 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
             //ドキュメントにその属性情報つきの文字列を挿入
             document.insertString(document.getLength(), "[recv]"+text+"\n", attribute);
 
-            if(text == "204 DOPLAY"){
+            if("102 PLAYERID 0".equals(text)){
+                playerId = "0";
+            } else if("102 PLAYERID 1".equals(text)){
+                playerId = "1";
+            }
+
+            if("204 DOPLAY".equals(text)){
                 String sendRanText = "210 COMFPRM";
                 this.sendMessage(sendRanText);
+                String sendPlayCommand = "205 PLAY " + playerId;
+
+                // 検証の部分なのでAIが判断した時点ですでに考慮されていればいらない
+                if(professorVal == 1){
+                    sendPlayCommand = sendPlayCommand + " " + "P" + "1-1";
+                }else{
+                    sendPlayCommand = sendPlayCommand + " " + "S" + "1-1";
+                }
+                this.sendMessage(sendPlayCommand);
             }
             
             /*
@@ -308,11 +326,6 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
         }
 
     }
-
-    //addMessage に来る情報を
-//    private void randomMessage(String text){
-//        if
-//    }
     
     /** ログなどの追加用　黒文字で表示 */
     @Override
