@@ -273,6 +273,11 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
             attribute.addAttribute(StyleConstants.Foreground, Color.BLUE);
             //ドキュメントにその属性情報つきの文字列を挿入
             document.insertString(document.getLength(), "[recv]"+text+"\n", attribute);
+
+            if(text == "204 DOPLAY"){
+                String sendRanText = "210 COMFPRM";
+                this.sendMessage(sendRanText);
+            }
             
             /*
             
@@ -303,6 +308,11 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
         }
 
     }
+
+    //addMessage に来る情報を
+//    private void randomMessage(String text){
+//        if
+//    }
     
     /** ログなどの追加用　黒文字で表示 */
     @Override
