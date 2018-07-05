@@ -33,6 +33,8 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
     //BlockusAI
     private LaboAI myAI;
     
+
+    
     private String defaultIP;
     private String defaultPort = "18420";
 
@@ -51,6 +53,7 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
         this.myAI = ai;
         this.jTextField2.setText(defaultIP);
         this.jTextField4.setText(defaultPort);
+        
     }
 
     public ClientGUI() {
@@ -273,6 +276,18 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
             attribute.addAttribute(StyleConstants.Foreground, Color.BLUE);
             //ドキュメントにその属性情報つきの文字列を挿入
             document.insertString(document.getLength(), "[recv]"+text+"\n", attribute);
+            
+            if("204 DOPLAY".equals(text)){
+                String place = this.myAI.RandomPut_place();
+                String worker = this.myAI.RnadomPut_worker(place);
+                //String sendRanText = "210 COMFPRM";
+                String sendRanText0 = "205 PLAY 0 "+worker+" "+place;
+                String sendRanText1 = "205 PLAY 1 "+worker+" "+place;
+                
+                this.sendMessage(sendRanText0);
+                this.sendMessage(sendRanText1);
+                
+            }
             
             /*
             
