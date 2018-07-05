@@ -264,12 +264,13 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
 
     }
 
-    String playerId;
+    int playerId = 0;
     int professorVal = 1;
     int studentVal = 1;
     /** 通信によって文字を取得したときに（だけ）呼び出される */
     @Override
     public void reciveMessage(String text){
+
         //属性情報の文字色に青を設定
         try {
             SimpleAttributeSet attribute = new SimpleAttributeSet();
@@ -277,49 +278,47 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
             //ドキュメントにその属性情報つきの文字列を挿入
             document.insertString(document.getLength(), "[recv]"+text+"\n", attribute);
 
+
             if("102 PLAYERID 0".equals(text)){
-                playerId = "0";
+                playerId = 0;
             } else if("102 PLAYERID 1".equals(text)){
-                playerId = "1";
+                playerId = 1;
             }
 
             if("204 DOPLAY".equals(text)){
+                // 馬場が書きました
                 String sendRanText = "210 COMFPRM";
                 this.sendMessage(sendRanText);
-                String sendPlayCommand = "205 PLAY " + playerId;
 
-                // 検証の部分なのでAIが判断した時点ですでに考慮されていればいらない
-                if(professorVal == 1){
-                    sendPlayCommand = sendPlayCommand + " " + "P" + "1-1";
-                }else{
-                    sendPlayCommand = sendPlayCommand + " " + "S" + "1-1";
+                // 211 RESOURCES のみ取り出す
+                receiveResouces = text;
+                Matcher mc = resources.matcher(receiveResouces);
+
+                player_id = Integer.parseInt(mc.group(3));
+                if(player_id == 0){
+                    int i = 5;
+                    while(i < 15){
+                        player_0.add(Integer.parseInt(mc.group(i)));
+                        i = i + 2;
+                    }
+                }else if(player_id == 1){
+                    int i = 5;
+                    while(i < 15){
+                        player_1.add(Integer.parseInt(mc.group(i)));
+                        i = i + 2;
+                    }
                 }
-                this.sendMessage(sendPlayCommand);
+//                String sendPlayCommand = "205 PLAY " + playerId;
+//
+//                // 検証の部分なのでAIが判断した時点ですでに考慮されていればいらない
+//                if(professorVal == 1){
+//                    sendPlayCommand = sendPlayCommand + " " + "P " + "1-1";
+//                }else{
+//                    sendPlayCommand = sendPlayCommand + " " + "S " + "1-1";
+//                }
+//                this.sendMessage(sendPlayCommand);
             }
-            
-            /*
-            
-            正規表現でパターンマッチング
-            動作確認なし
-            
-            str = text;
-            Matcher mc = resources.matcher(str);
-            player_id = Integer.parseInt(mc.group(3));
-            if(player_id == 0){
-                int i = 5;
-                while(i < 15){
-                    player_0.add(Integer.parseInt(mc.group(i)));
-                    i = i + 2;
-                }
-            }else if(player_id == 1){
-                int i = 5;
-                while(i < 15){
-                    player_1.add(Integer.parseInt(mc.group(i)));
-                    i = i + 2;
-                }
-            }        
-            */
-            
+
             this.jTextPane1.setCaretPosition(document.getLength());
         } catch (BadLocationException ex) {
             Logger.getLogger(ClientGUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -341,19 +340,14 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
         }
 
     }
-    
-    /*
-    
-    馬場が書きました
-    
-    String str;
+
     int player_id;
-    //各プレイヤーのArrayListの中身→　1番目：教授の数  2番目：助手の数　3番目：学生の数　4番目：お金の数　5番目：研究成果の数　6番目：負債の数
+    String receiveResouces;
     ArrayList player_0 = new ArrayList();
     ArrayList player_1 = new ArrayList();
-    
+    //各プレイヤーのArrayListの中身→　1番目：教授の数  2番目：助手の数　3番目：学生の数　4番目：お金の数　5番目：研究成果の数　6番目：負債の数
     Pattern resources = Pattern.compile("(211)\\s(.*)\\s(0|1)\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9]+)\\s(.)([0-9]+)\\s(.)([0-9]+)");
-    */
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
