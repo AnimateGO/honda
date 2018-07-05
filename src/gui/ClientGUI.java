@@ -291,21 +291,23 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                 this.sendMessage(sendRanText);
 
                 // 211 RESOURCES のみ取り出す
-                receiveResouces = text;
-                Matcher mc = resources.matcher(receiveResouces);
+                if("211 RESOUCES".equals(text)) {
+                    receiveResouces = text;
+                    Matcher mc = resources.matcher(receiveResouces);
 
-                player_id = Integer.parseInt(mc.group(3));
-                if(player_id == 0){
-                    int i = 5;
-                    while(i < 15){
-                        player_0.add(Integer.parseInt(mc.group(i)));
-                        i = i + 2;
-                    }
-                }else if(player_id == 1){
-                    int i = 5;
-                    while(i < 15){
-                        player_1.add(Integer.parseInt(mc.group(i)));
-                        i = i + 2;
+                    player_id = Integer.parseInt(mc.group(3));
+                    if (player_id == 0) {
+                        int i = 5;
+                        while (i < 15) {
+                            player_0.add(Integer.parseInt(mc.group(i)));
+                            i = i + 2;
+                        }
+                    } else if (player_id == 1) {
+                        int i = 5;
+                        while (i < 15) {
+                            player_1.add(Integer.parseInt(mc.group(i)));
+                            i = i + 2;
+                        }
                     }
                 }
 //                String sendPlayCommand = "205 PLAY " + playerId;
