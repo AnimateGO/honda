@@ -278,6 +278,10 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
             //ドキュメントにその属性情報つきの文字列を挿入
             document.insertString(document.getLength(), "[recv]"+text+"\n", attribute);
 
+            String send101Name = "101 NAME hoge";
+            if("100 HELLO".equals(text)) {
+                this.sendMessage(send101Name);
+            }
 
             if("102 PLAYERID 0".equals(text)){
                 playerId = 0;
@@ -287,37 +291,33 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
 
             if("204 DOPLAY".equals(text)){
                 // 馬場が書きました
-                String sendRanText = "210 COMFPRM";
-                this.sendMessage(sendRanText);
+                String send210Text = "210 COMFPRM";
+                this.sendMessage(send210Text);
+            }
 
-                // 211 RESOURCES のみ取り出す
-                if("211 RESOUCES".equals(text)) {
-                    receiveResouces = text;
-                    Matcher mc = resources.matcher(receiveResouces);
+            String send211Text = "211 RESOURCES " + playerId;
 
-                    player_id = Integer.parseInt(mc.group(3));
-                    if (player_id == 0) {
-                        int i = 5;
-                        while (i < 15) {
-                            player_0.add(Integer.parseInt(mc.group(i)));
-                            i = i + 2;
-                        }
-                    } else if (player_id == 1) {
-                        int i = 5;
-                        while (i < 15) {
-                            player_1.add(Integer.parseInt(mc.group(i)));
-                            i = i + 2;
-                        }
+            // 211 RESOURCES のみ取り出す
+            if(send211Text.contains(text)){
+                receiveResouces = text;
+                Matcher mc = resources.matcher(receiveResouces);
+
+                playerId = Integer.parseInt(mc.group(3));
+                if (playerId == 0) {
+                    int i = 5;
+                    while (i < 15) {
+                        player_0.add(Integer.parseInt(mc.group(i)));
+                        i = i + 2;
+                    }
+                } else if (playerId == 1) {
+                    int i = 5;
+                    while (i < 15) {
+                        player_1.add(Integer.parseInt(mc.group(i)));
+                        i = i + 2;
                     }
                 }
-//                String sendPlayCommand = "205 PLAY " + playerId;
-//
-//                // 検証の部分なのでAIが判断した時点ですでに考慮されていればいらない
-//                if(professorVal == 1){
-//                    sendPlayCommand = sendPlayCommand + " " + "P " + "1-1";
-//                }else{
-//                    sendPlayCommand = sendPlayCommand + " " + "S " + "1-1";
-//                }
+
+//                sendPlayCommand = sendPlayCommand + worker + " " + place;
 //                this.sendMessage(sendPlayCommand);
             }
 
