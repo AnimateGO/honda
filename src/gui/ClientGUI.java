@@ -270,7 +270,6 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
     /** 通信によって文字を取得したときに（だけ）呼び出される */
     @Override
     public void reciveMessage(String text){
-
         //属性情報の文字色に青を設定
         try {
             SimpleAttributeSet attribute = new SimpleAttributeSet();
