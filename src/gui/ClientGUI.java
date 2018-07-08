@@ -289,9 +289,19 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
             }
 
             if("204 DOPLAY".equals(text)){
-                // 馬場が書きました
+                String sendRanText;
                 String send210Text = "210 COMFPRM";
                 this.sendMessage(send210Text);
+
+                String place = this.myAI.RandomPut_place();
+                String worker = this.myAI.RnadomPut_worker(place);
+
+                if(playerId == 0){
+                    sendRanText = "205 PLAY 0 " + worker + " " + place;
+                }else {
+                    sendRanText = "205 PLAY 1 " + worker + " " + place;
+                }
+                this.sendMessage(sendRanText);
             }
 
             String send211Text = "211 RESOURCES " + playerId;
@@ -301,20 +311,20 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                 receiveResouces = text;
                 Matcher mc = resources.matcher(receiveResouces);
 
-                playerId = Integer.parseInt(mc.group(3));
-                if (playerId == 0) {
-                    int i = 5;
-                    while (i < 15) {
-                        player_0.add(Integer.parseInt(mc.group(i)));
-                        i = i + 2;
-                    }
-                } else if (playerId == 1) {
-                    int i = 5;
-                    while (i < 15) {
-                        player_1.add(Integer.parseInt(mc.group(i)));
-                        i = i + 2;
-                    }
-                }
+//                playerId = Integer.parseInt(mc.group(3));
+//                if (playerId == 0) {
+//                    int i = 5;
+//                    while (i < 15) {
+//                        player_0.add(Integer.parseInt(mc.group(i)));
+//                        i = i + 2;
+//                    }
+//                } else if (playerId == 1) {
+//                    int i = 5;
+//                    while (i < 15) {
+//                        player_1.add(Integer.parseInt(mc.group(i)));
+//                        i = i + 2;
+//                    }
+//                }
 
 //                sendPlayCommand = sendPlayCommand + worker + " " + place;
 //                this.sendMessage(sendPlayCommand);
