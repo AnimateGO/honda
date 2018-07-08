@@ -21,15 +21,11 @@ public abstract class LaboAI implements MessageRecevable{
     protected Game gameBoard;
     protected boolean isThinking;
     
-    //ここから自分で書いたメソッドで使う変数?
-    ArrayList<String> my_canput_place = new ArrayList<String>();
-    ArrayList<String> your_canput_place = new ArrayList<String>();
-    ArrayList<String> my_pro_canput_place = new ArrayList<String>();
-    ArrayList<String> your_pro_canput_place = new ArrayList<String>();
-    ArrayList<String> my_stu_canput_place = new ArrayList<String>();
-    ArrayList<String> your_stu_canput_place = new ArrayList<String>();
-    
-    String[] PLACE_NAMES = {"1-1","2-1","2-2","2-3","3-1","3-2","3-3","4-1","4-2","4-3","5-1","5-2","5-3","6-1","6-2"};
+    String[] PLACE_NAMES = {"2-1","2-2","2-3","3-1","3-2","3-3","4-1","4-2","4-3","5-1","5-2","5-3"};
+    String[] S1_PLACE_NAMES = {"1-1","2-1","2-2","2-3","5-1"};
+    String[] S2_PLACE_NAMES = {"1-1","2-1","2-2","2-3","5-1","5-2","5-3"};
+    String[] S3_PLACE_NAMES = {"1-1","2-1","2-2","2-3","4-1","4-2","4-3","5-1","5-2","5-3"};
+    //String[] PLACE_NAMES = {"1-1","2-1","2-2","2-3","3-1","3-2","3-3","4-1","4-2","4-3","5-1","5-2","5-3","6-1","6-2"};
     
     public Board board;
   
@@ -156,11 +152,20 @@ public abstract class LaboAI implements MessageRecevable{
     }
     
     //ランダムに次の手を作成するメソッド。返り値はString 置ける場所
-    public String RandomPut_place(){
+    //シーズンがわかるなら返り値にすると、そのシーズンでやった方がよい手が打てる
+    public String RandomPut_place(String season){
         String place ;
         java.util.Random random = new java.util.Random();
-        int i = random.nextInt(14);
-        place = this.PLACE_NAMES[i];
+        if(season == "1a" || season == "1b"){
+            int i = random.nextInt(5);
+            place = this.S1_PLACE_NAMES[i];
+        }else if(season == "2a" || season == "2b"){
+            int i = random.nextInt(7);
+            place = this.S2_PLACE_NAMES[i];
+        }else{
+            int i = random.nextInt(10);
+            place = this.S3_PLACE_NAMES[i];
+        }
         /*
         if(str[0].startsWith("5")){
             str[1] = "P";
@@ -173,12 +178,16 @@ public abstract class LaboAI implements MessageRecevable{
     }
     
     //資金のとこに教授置かないと話にならないので5で始まる場所の時は教授を、それ以外は学生を返す
-    public String RnadomPut_worker(String str){
+    //5で始まらない場合は教授と助手ランダムに打つ
+    public String RandomPut_worker(String str){
+        String[] workers = {"P","S"};
         String worker;
+        java.util.Random random = new java.util.Random();
         if(str.startsWith("5")){
             worker = "P";
         }else{
-            worker = "S";
+            int i = random.nextInt(2);
+            worker = workers[i];
         }
         return worker;
     }

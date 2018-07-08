@@ -6,6 +6,7 @@ package gui;
 
 import ai.LaboAI;
 import java.awt.Color;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -14,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.Timer;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.SimpleAttributeSet;
@@ -32,9 +34,11 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
     private DefaultStyledDocument document;
     //BlockusAI
     private LaboAI myAI;
-    
+
     private String defaultIP;
     private String defaultPort = "18420";
+
+    int playerID;
 
     /**
      * コンストラクタ　文字の表示部分のみを初期化する
@@ -51,6 +55,7 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
         this.myAI = ai;
         this.jTextField2.setText(defaultIP);
         this.jTextField4.setText(defaultPort);
+        
     }
 
     public ClientGUI() {
@@ -263,10 +268,7 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
         }
 
     }
-
-    int playerId = 0;
-    int professorVal = 1;
-    int studentVal = 1;
+    
     /** 通信によって文字を取得したときに（だけ）呼び出される */
     @Override
     public void reciveMessage(String text){
@@ -277,59 +279,55 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
             //ドキュメントにその属性情報つきの文字列を挿入
             document.insertString(document.getLength(), "[recv]"+text+"\n", attribute);
 
-            String send101Name = "101 NAME hoge";
-            if("100 HELLO".equals(text)) {
-                this.sendMessage(send101Name);
-            }
-
-            if("102 PLAYERID 0".equals(text)){
-                playerId = 0;
-            } else if("102 PLAYERID 1".equals(text)){
-                playerId = 1;
-            }
-
-            if("204 DOPLAY".equals(text)){
-                String sendRanText;
-                String send210Text = "210 COMFPRM";
-                this.sendMessage(send210Text);
-
-                String place = this.myAI.RandomPut_place();
-                String worker = this.myAI.RnadomPut_worker(place);
-
-                if(playerId == 0){
-                    sendRanText = "205 PLAY 0 " + worker + " " + place;
-                }else {
-                    sendRanText = "205 PLAY 1 " + worker + " " + place;
-                }
+            if("100 HELLO".equals(text)){
+                String sendRanText = "101 NAME YAMADALAB";
                 this.sendMessage(sendRanText);
             }
 
-            String send211Text = "211 RESOURCES " + playerId;
-
-            // 211 RESOURCES のみ取り出す
-            if(send211Text.contains(text)){
-                receiveResouces = text;
-                Matcher mc = resources.matcher(receiveResouces);
-
-//                playerId = Integer.parseInt(mc.group(3));
-//                if (playerId == 0) {
-//                    int i = 5;
-//                    while (i < 15) {
-//                        player_0.add(Integer.parseInt(mc.group(i)));
-//                        i = i + 2;
-//                    }
-//                } else if (playerId == 1) {
-//                    int i = 5;
-//                    while (i < 15) {
-//                        player_1.add(Integer.parseInt(mc.group(i)));
-//                        i = i + 2;
-//                    }
-//                }
-
-//                sendPlayCommand = sendPlayCommand + worker + " " + place;
-//                this.sendMessage(sendPlayCommand);
+            if("102 PLAYERID 0".equals(text)){
+                playerID = 0;
+            }else if("102 PLAYERID 1".equals(text)){
+                playerID = 1;
             }
 
+            if("204 DOPLAY".equals(text)){
+                //ランダムで打つ場所、打つ役職を決定
+                String season = "";
+                String place = this.myAI.RandomPut_place(season);
+                String worker = this.myAI.RandomPut_worker(place);
+                if(playerID == 0){
+                    String sendRanText0 = "205 PLAY 0 "+worker+" "+place;
+                    this.sendMessage(sendRanText0);
+                }else if(playerID == 1){
+                    String sendRanText1 = "205 PLAY 1 "+worker+" "+place;
+                    this.sendMessage(sendRanText1);
+                }
+                //String sendRanText = "210 COMFPRM";
+            }
+            
+            /*
+            
+            正規表現でパターンマッチング
+            動作確認なし
+            
+            str = text;
+            Matcher mc = resources.matcher(str);
+            player_id = Integer.parseInt(mc.group(3));
+            if(player_id == 0){
+                int i = 5;
+                while(i < 15){
+                    player_0.add(Integer.parseInt(mc.group(i)));
+                    i = i + 2;
+                }
+            }else if(player_id == 1){
+                int i = 5;
+                while(i < 15){
+                    player_1.add(Integer.parseInt(mc.group(i)));
+                    i = i + 2;
+                }
+            }        
+            */
+            
             this.jTextPane1.setCaretPosition(document.getLength());
         } catch (BadLocationException ex) {
             Logger.getLogger(ClientGUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -351,14 +349,19 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
         }
 
     }
-
+    
+    /*
+    
+    馬場が書きました
+    
+    String str;
     int player_id;
-    String receiveResouces;
+    //各プレイヤーのArrayListの中身→　1番目：教授の数  2番目：助手の数　3番目：学生の数　4番目：お金の数　5番目：研究成果の数　6番目：負債の数
     ArrayList player_0 = new ArrayList();
     ArrayList player_1 = new ArrayList();
-    //各プレイヤーのArrayListの中身→　1番目：教授の数  2番目：助手の数　3番目：学生の数　4番目：お金の数　5番目：研究成果の数　6番目：負債の数
+    
     Pattern resources = Pattern.compile("(211)\\s(.*)\\s(0|1)\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9]+)\\s(.)([0-9]+)\\s(.)([0-9]+)");
-
+    */
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
