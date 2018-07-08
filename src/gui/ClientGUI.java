@@ -6,6 +6,7 @@ package gui;
 
 import ai.LaboAI;
 import java.awt.Color;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -14,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.Timer;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.SimpleAttributeSet;
@@ -37,6 +39,8 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
     
     private String defaultIP;
     private String defaultPort = "18420";
+    
+    int playerID; 
 
     /**
      * コンストラクタ　文字の表示部分のみを初期化する
@@ -277,16 +281,30 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
             //ドキュメントにその属性情報つきの文字列を挿入
             document.insertString(document.getLength(), "[recv]"+text+"\n", attribute);
             
+            if("100 HELLO".equals(text)){
+                String sendRanText = "101 NAME YAMADALAB";
+                this.sendMessage(sendRanText);
+            }
+            
+            if("102 PLAYERID 0".equals(text)){
+                playerID = 0;
+            }else if("102 PLAYERID 1".equals(text)){
+                playerID = 1;
+            }
+            
             if("204 DOPLAY".equals(text)){
-                String place = this.myAI.RandomPut_place();
-                String worker = this.myAI.RnadomPut_worker(place);
-                //String sendRanText = "210 COMFPRM";
-                String sendRanText0 = "205 PLAY 0 "+worker+" "+place;
-                String sendRanText1 = "205 PLAY 1 "+worker+" "+place;
-                
-                this.sendMessage(sendRanText0);
-                this.sendMessage(sendRanText1);
-                
+                //ランダムで打つ場所、打つ役職を決定
+                String season = "";
+                String place = this.myAI.RandomPut_place(season);
+                String worker = this.myAI.RandomPut_worker(place);
+                if(playerID == 0){
+                    String sendRanText0 = "205 PLAY 0 "+worker+" "+place;
+                    this.sendMessage(sendRanText0);
+                }else if(playerID == 1){
+                    String sendRanText1 = "205 PLAY 1 "+worker+" "+place;
+                    this.sendMessage(sendRanText1);
+                }
+                //String sendRanText = "210 COMFPRM"; 
             }
             
             /*
