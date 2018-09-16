@@ -41,6 +41,10 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
     int playerID;
     ArrayList player_0 = new ArrayList();
     ArrayList player_1 = new ArrayList();
+    ArrayList board = new ArrayList();
+    ArrayList season = new ArrayList();
+    ArrayList trend = new ArrayList();
+    ArrayList score = new ArrayList();
 
     /**
      * コンストラクタ　文字の表示部分のみを初期化する
@@ -310,10 +314,10 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
 //                    this.sendMessage(sendRanText1);
 //                }
             }
+            String str = text;
 
-            //正規表現で情報を抜き取る
+            //正規表現でリソース情報を抜き取る
             if(text.startsWith("211")) {
-                String str = text;
                 //211_RESOURCES_0_P1_A(0)_S(1)_M(0)_R(0)
                 Pattern resources = Pattern.compile("(211)\\s(.*)\\s(0|1)\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9]+)\\s(.)([0-9]+)\\s(.)([0-9]+)");
                 Matcher mc = resources.matcher(str);
@@ -334,6 +338,50 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                     }
                 }
             }
+
+            //ボードの配置
+            else if(text.startsWith("212")){
+                Pattern board_info = Pattern.compile("(212)\\s(.*)\\s([1-6])(-)([1-3])\\s([PAS])\\s([01])");
+                Matcher mc2 = board_info.matcher(str);
+                mc2.find();
+                int i = 3;
+                while(i < 8){
+                    board.add(mc2.group(i));
+                    i++;
+                }
+            }
+
+            //シーズン
+            else if(text.startsWith("213")){
+                Pattern season_info = Pattern.compile("(213)\\s(.*)\\s([1-6])([ab])");
+                Matcher mc3 = season_info.matcher(str);
+                mc3.find();
+                int i = 3;
+                season.add(mc3.group(i)+mc3.group(i+1));
+            }
+
+            //トレンド
+            else if(text.startsWith("214")){
+                Pattern trend_info = Pattern.compile("(214)\\s(.*)\\s(T)([0-3])");
+                Matcher mc4 = trend_info.matcher(str);
+                mc4.find();
+                int i = 4;
+                trend.add("T" + mc4.group(i));
+            }
+
+            //スコア
+            else if(text.startsWith("215")){
+                Pattern score_info = Pattern.compile("(215)\\s(.*)\\s(T)([1-3])\\s([0-9]+)\\s([0-9]+)");
+                Matcher mc5 = score_info.matcher(str);
+                mc5.find();
+                int i = 4;
+                score.add("T" + mc5.group(i));
+                while(i < 7) {
+                    i++;
+                    score.add(Integer.parseInt(mc5.group(i)));
+                }
+            }
+
             this.jTextPane1.setCaretPosition(document.getLength());
         } catch (BadLocationException ex) {
             Logger.getLogger(ClientGUI.class.getName()).log(Level.SEVERE, null, ex);
