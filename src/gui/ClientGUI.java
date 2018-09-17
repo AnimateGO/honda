@@ -34,13 +34,17 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
     private DefaultStyledDocument document;
     //BlockusAI
     private LaboAI myAI;
-    
 
-    
     private String defaultIP;
     private String defaultPort = "18420";
-    
-    int playerID; 
+
+    int playerID;
+    ArrayList player_0 = new ArrayList();
+    ArrayList player_1 = new ArrayList();
+    ArrayList board = new ArrayList();
+    ArrayList season = new ArrayList();
+    ArrayList trend = new ArrayList();
+    ArrayList score = new ArrayList();
 
     /**
      * コンストラクタ　文字の表示部分のみを初期化する
@@ -280,56 +284,104 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
             attribute.addAttribute(StyleConstants.Foreground, Color.BLUE);
             //ドキュメントにその属性情報つきの文字列を挿入
             document.insertString(document.getLength(), "[recv]"+text+"\n", attribute);
-            
+
             if("100 HELLO".equals(text)){
                 String sendRanText = "101 NAME YAMADALAB";
                 this.sendMessage(sendRanText);
             }
-            
+
             if("102 PLAYERID 0".equals(text)){
                 playerID = 0;
             }else if("102 PLAYERID 1".equals(text)){
                 playerID = 1;
             }
-            
+
             if("204 DOPLAY".equals(text)){
+                //パターンマッチングで情報を挿入
+                this.sendMessage("210 CONFPRM");
+
+
                 //ランダムで打つ場所、打つ役職を決定
-                String season = "";
-                String place = this.myAI.RandomPut_place(season);
-                String worker = this.myAI.RandomPut_worker(place);
-                if(playerID == 0){
-                    String sendRanText0 = "205 PLAY 0 "+worker+" "+place;
-                    this.sendMessage(sendRanText0);
-                }else if(playerID == 1){
-                    String sendRanText1 = "205 PLAY 1 "+worker+" "+place;
-                    this.sendMessage(sendRanText1);
-                }
-                //String sendRanText = "210 COMFPRM"; 
+//                String season = "";
+//                String place = this.myAI.RandomPut_place(season);
+//                String worker = this.myAI.RandomPut_worker(place);
+//
+//                if(playerID == 0){
+//                    String sendRanText0 = "205 PLAY 0 "+worker+" "+place;
+//                    this.sendMessage(sendRanText0);
+//                }else if(playerID == 1){
+//                    String sendRanText1 = "205 PLAY 1 "+worker+" "+place;
+//                    this.sendMessage(sendRanText1);
+//                }
             }
-            
-            /*
-            
-            正規表現でパターンマッチング
-            動作確認なし
-            
-            str = text;
-            Matcher mc = resources.matcher(str);
-            player_id = Integer.parseInt(mc.group(3));
-            if(player_id == 0){
-                int i = 5;
-                while(i < 15){
-                    player_0.add(Integer.parseInt(mc.group(i)));
-                    i = i + 2;
+            String str = text;
+
+            //正規表現でリソース情報を抜き取る
+            if(text.startsWith("211")) {
+                //211_RESOURCES_0_P1_A(0)_S(1)_M(0)_R(0)
+                Pattern resources = Pattern.compile("(211)\\s(.*)\\s(0|1)\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9]+)\\s(.)([0-9]+)\\s(.)([0-9]+)");
+                Matcher mc = resources.matcher(str);
+                mc.find();
+                int player_id = Integer.parseInt(mc.group(3));
+
+                if (player_id == 0) {
+                    int i = 5;
+                    while (i < 15) {
+                        player_0.add(Integer.parseInt(mc.group(i)));
+                        i = i + 2;
+                    }
+                } else if (player_id == 1) {
+                    int i = 5;
+                    while (i < 15) {
+                        player_1.add(Integer.parseInt(mc.group(i)));
+                        i = i + 2;
+                    }
                 }
-            }else if(player_id == 1){
-                int i = 5;
-                while(i < 15){
-                    player_1.add(Integer.parseInt(mc.group(i)));
-                    i = i + 2;
+            }
+
+            //ボードの配置
+            else if(text.startsWith("212")){
+                Pattern board_info = Pattern.compile("(212)\\s(.*)\\s([1-6])(-)([1-3])\\s([PAS])\\s([01])");
+                Matcher mc2 = board_info.matcher(str);
+                mc2.find();
+                int i = 3;
+                while(i < 8){
+                    board.add(mc2.group(i));
+                    i++;
                 }
-            }        
-            */
-            
+            }
+
+            //シーズン
+            else if(text.startsWith("213")){
+                Pattern season_info = Pattern.compile("(213)\\s(.*)\\s([1-6])([ab])");
+                Matcher mc3 = season_info.matcher(str);
+                mc3.find();
+                int i = 3;
+                season.add(mc3.group(i)+mc3.group(i+1));
+            }
+
+            //トレンド
+            else if(text.startsWith("214")){
+                Pattern trend_info = Pattern.compile("(214)\\s(.*)\\s(T)([0-3])");
+                Matcher mc4 = trend_info.matcher(str);
+                mc4.find();
+                int i = 4;
+                trend.add("T" + mc4.group(i));
+            }
+
+            //スコア
+            else if(text.startsWith("215")){
+                Pattern score_info = Pattern.compile("(215)\\s(.*)\\s(T)([1-3])\\s([0-9]+)\\s([0-9]+)");
+                Matcher mc5 = score_info.matcher(str);
+                mc5.find();
+                int i = 4;
+                score.add("T" + mc5.group(i));
+                while(i < 7) {
+                    i++;
+                    score.add(Integer.parseInt(mc5.group(i)));
+                }
+            }
+
             this.jTextPane1.setCaretPosition(document.getLength());
         } catch (BadLocationException ex) {
             Logger.getLogger(ClientGUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -351,19 +403,7 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
         }
 
     }
-    
-    /*
-    
-    馬場が書きました
-    
-    String str;
-    int player_id;
-    //各プレイヤーのArrayListの中身→　1番目：教授の数  2番目：助手の数　3番目：学生の数　4番目：お金の数　5番目：研究成果の数　6番目：負債の数
-    ArrayList player_0 = new ArrayList();
-    ArrayList player_1 = new ArrayList();
-    
-    Pattern resources = Pattern.compile("(211)\\s(.*)\\s(0|1)\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9]+)\\s(.)([0-9]+)\\s(.)([0-9]+)");
-    */
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
