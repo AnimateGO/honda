@@ -21,16 +21,47 @@ public abstract class LaboAI implements MessageRecevable{
     protected Game gameBoard;
     protected boolean isThinking;
     
-    String[] PLACE_NAMES = {"2-1","2-2","2-3","3-1","3-2","3-3","4-1","4-2","4-3","5-1","5-2","5-3"};
     String[] S1_PLACE_NAMES = {"1-1","2-1","2-2","2-3","5-1"};
     String[] S2_PLACE_NAMES = {"1-1","2-1","2-2","2-3","5-1","5-2","5-3"};
     String[] S3_PLACE_NAMES = {"1-1","2-1","2-2","2-3","4-1","4-2","4-3","5-1","5-2","5-3"};
-    //String[] PLACE_NAMES = {"1-1","2-1","2-2","2-3","3-1","3-2","3-3","4-1","4-2","4-3","5-1","5-2","5-3","6-1","6-2"};
+    String[] PLACE_NAMES = {"1-1","2-1","2-2","2-3","3-1","3-2","3-3","4-1","4-2","4-3","5-1","5-2","5-3","6-1","6-2"};
+    //boolean P_CANPUT_PLACE[] = new boolean[15];
+    //boolean A_CANPUT_PLACE[] = new boolean[15];
+    //boolean S_CANPUT_PLACE[] = new boolean[15];
+    boolean CANPUT_PLACE[][];
     
     public Board board;
+    
+    private int[] money;
+    private int[] reserchPoint;
+    private int[] currentScore;
+    private int[][] workerList; 
+    private int[][] usedWorkerList;
+    private int[] zemiCount;
+    private int currentStartPlayer;
+    private int changeFlag;
+    private String trend;
+    private String[] ifTrend;
+    private int[][] resources;
+    private int[] operateResources;
+    private String operateTrend;
+    private int i;
   
     public LaboAI(Game game){
+        this.CANPUT_PLACE = new boolean[30][15];
+        this.money = new int[2];
+        this.reserchPoint = new int[2];
+        this.currentScore = new int[2];
+        this.workerList = new int[2][3];
+        this.usedWorkerList = new int[2][3];
+        this.zemiCount = new int[3];
+        this.resources = new int [10][8];
+        this.operateResources = new int[8];
+        this.currentStartPlayer = 0;
+        this.changeFlag = 0;
         this.gameBoard = game;
+        this.ifTrend = new String[10];
+        this.i = -1;
     }
     public abstract void getNewMessage(String message);
 
@@ -46,110 +77,582 @@ public abstract class LaboAI implements MessageRecevable{
     
     public abstract void setOutputInterface(MessageRecevable mr);
     
-    
-    
-    //ボード上で空いている場所を探索
-    //m_placeに自分の置ける手を格納
-    //y_placeに相手の置ける手を格納
-    public void boardCanputPlace(int PlayerID ,ArrayList<String> place){
-        if(PlayerID == 0){
-          for(int i = 0; i < 15; i++){
-              if(this.board.canPutWorker(PlayerID, PLACE_NAMES[i])){
-                  place.add(PLACE_NAMES[i]);
-              } 
-          }
-            //探し終わったら"Last"をArrayListの最後に挿入
-            place.add("Last");
-        }else if(PlayerID == 1){
-            for(int i = 0; i < 15; i++){
-                if(this.board.canPutWorker(PlayerID, PLACE_NAMES[i])){
-                    place.add(PLACE_NAMES[i]);
-                }
+    public boolean canPutWorker(int player,String typeOfWorker,String place){
+        if(place.startsWith("2")){
+            if(this.money[player] >= 2){
+                return true;
+            } else {
+                return false;
             }
-            place.add("Last");
+        }
+        if(place.equals("3-1")){
+            if(this.reserchPoint[player] >= 2){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if(place.equals("3-2")){
+            if(this.reserchPoint[player] >= 4 && this.money[player] >= 1){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if(place.equals("3-3")){
+            if(this.reserchPoint[player] >= 8 && this.money[player] >= 1){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if(place.startsWith("4")){
+            if(this.reserchPoint[player] >= 8 && this.money[player] >= 1){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        //タイプが問題ないかを確認
+        if(place.startsWith("5")){
+            if(typeOfWorker.equals("P") || typeOfWorker.equals("A")){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if(place.equals("6-1")){
+            if(typeOfWorker.equals("P") || typeOfWorker.equals("A")){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if(place.equals("6-2")){
+            if(typeOfWorker.equals("P") || this.currentScore[player] >= 10){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    
+    //playerID（0,1で指定）して、そのプレイヤーの置ける場所を検索
+    public void searchCanputPlace(int playerID,int depth){
+        for(int i = depth * 3; i < (depth * 3 + 3); i++){
+            for(int j = 0; j < 15; j++){
+            CANPUT_PLACE[i][j] = this.canPutWorker(playerID, "P", PLACE_NAMES[j]);
+            }
+            for(int j = 0; j < 15; j++){
+            CANPUT_PLACE[i][j] = this.canPutWorker(playerID, "A", PLACE_NAMES[j]);
+            }
+            for(int j = 0; j < 15; j++){
+            CANPUT_PLACE[i][j] = this.canPutWorker(playerID, "S", PLACE_NAMES[j]);
+            }
         }
     }
     
-    //お金、実験成果を参照して置ける手を配列に格納するメソッド
-    //boardCanputPlaceで格納した配列を用いる
-    public void workerCanputPlace(int PlayerID, ArrayList<String> place, ArrayList<String> p_place, ArrayList<String> s_place){
-        String str ;
-        if(PlayerID == 0){
-            str = place.get(0);
-            for(int i = 0;!"Last".equals(str) ;i++){
-                if(str.startsWith("5")){
-                    if(this.gameBoard.canPutWorker(PlayerID, "P", str)){
-                        p_place.add(str);
-                    }
-                }else{
-                    if(this.gameBoard.canPutWorker(PlayerID, "P", str)){
-                        p_place.add(str);
-                    }
-                    if(this.gameBoard.canPutWorker(PlayerID, "S", str)){
-                        s_place.add(str);
-                    }
-                }
-                str = place.get(i);
-            }
-            p_place.add(str);
-            s_place.add(str);
+    //受け取ったゲームリソースのデータを変数にセット
+    public void getResource(){
+        this.money = this.gameBoard.getMoney();
+        this.reserchPoint = this.gameBoard.getReserchPoint();
+        this.currentScore = this.gameBoard.getScore();
+        this.workerList = this.gameBoard.getWorkerList();
+        this.currentStartPlayer = this.gameBoard.getStartPlayer();
+        this.trend = this.gameBoard.getTrend();
+    }
+    
+    public void setResource(int depth, int playerID){
+        this.resources[depth][0] = playerID;
+        this.resources[depth][1] = this.money[playerID];
+        this.resources[depth][2] = this.reserchPoint[playerID];
+        this.resources[depth][3] = this.currentScore[playerID];
+        this.resources[depth][4] = this.workerList[playerID][0];
+        this.resources[depth][5] = this.workerList[playerID][1];
+        this.resources[depth][6] = this.workerList[playerID][2];
+        this.resources[depth][7] = this.currentStartPlayer;
+        this.ifTrend[depth] = this.trend;
+        
+    }
+    
+    /*
+    //役職、置いた場所によってリソースを変化させる
+    public void ifplay(int playerID,int[] resources,String worker,String place,String trend){
+        int workerID = 0;
+        if(worker.equals("A")){
+            workerID = 1;
+        }else if(worker.equals("S")){
+            workerID = 2;
         }
         
-        if(PlayerID == 1){
-            str = place.get(0);
-            for(int i = 0;!"Last".equals(str) ;i++){
-                if(str.startsWith("5")){
-                    if(this.gameBoard.canPutWorker(PlayerID, "P", str)){
-                        p_place.add(str);
+        if(place.equals("1-1")){
+            switch(workerID){
+                case 0:
+                    this.zemiCount[0] += 1;
+                    break;
+                case 1:
+                    this.zemiCount[1] += 1;
+                    break;
+                case 2:
+                    this.zemiCount[2] += 1;
+                    break;
+            }
+            //this.workerList[playerID][workerID] += -1;
+        }
+        
+        if(place.startsWith("2")){
+            if(this.money[playerID] >= 2){
+                this.money[playerID] += -2;
+            }
+            if(place.equals("2-1")){
+                this.reserchPoint[playerID] += 3;
+            }else if(place.equals("2-2")){
+                this.reserchPoint[playerID] += 4;
+            }else if(place.equals("2-3")){
+                this.reserchPoint[playerID] += 5;
+            }
+            //this.workerList[playerID][workerID] += -1;
+        } else {
+        }
+        if(place.equals("3-1")){
+            switch (workerID) {
+                case 0:
+                    this.currentScore[playerID] += 1;
+                    break;
+                case 1: 
+                    this.currentScore[playerID] += 1;
+                    break;
+                case 2:
+                    this.currentScore[playerID] += 2;
+                    break;
+                default:
+                    break;
+            }
+            this.reserchPoint[playerID] += -2;
+            //this.workerList[playerID][workerID] += -1;
+        }
+        
+        if(place.equals("3-2")){
+            switch (workerID) {
+                case 0:
+                    this.currentScore[playerID] += 3;
+                    break;
+                case 1: 
+                    this.currentScore[playerID] += 4;
+                    break;
+                case 2:
+                    this.currentScore[playerID] += 4;
+                    break;
+                default:
+                    break;
+            }
+            this.reserchPoint[playerID] += -4;
+            this.money[playerID] += -1;
+            //this.workerList[playerID][workerID] += -1;
+        }
+        
+        if(place.equals("3-3")){
+            switch (workerID) {
+                case 0:
+                    this.currentScore[playerID] += 7;
+                    break;
+                case 1: 
+                    this.currentScore[playerID] += 6;
+                    break;
+                case 2:
+                    this.currentScore[playerID] += 5;
+                    break;
+                default:
+                    break;
+            }
+            this.reserchPoint[playerID] += -8;
+            this.money[playerID] += -1;
+            //this.workerList[playerID][workerID] += -1;
+        }
+        
+        if(place.equals("4-1")){
+            switch (workerID) {
+                case 0:
+                    this.currentScore[playerID] += 8;
+                    break;
+                case 1: 
+                    this.currentScore[playerID] += 7;
+                    break;
+                case 2:
+                    this.currentScore[playerID] += 6;
+                    break;
+                default:
+                    break;
+            }
+            this.reserchPoint[playerID] += -8;
+            this.money[playerID] += -1;
+            //this.workerList[playerID][workerID] += -1;
+        }
+        
+        if(place.equals("4-2")){
+            switch (workerID) {
+                case 0:
+                    this.currentScore[playerID] += 7;
+                    break;
+                case 1: 
+                    this.currentScore[playerID] += 6;
+                    break;
+                case 2:
+                    this.currentScore[playerID] += 5;
+                    break;
+                default:
+                    break;
+            }
+            this.reserchPoint[playerID] += -8;
+            this.money[playerID] += -1;
+            //this.workerList[playerID][workerID] += -1;
+        }
+        
+        if(place.equals("4-3")){
+            switch (workerID) {
+                case 0:
+                    this.currentScore[playerID] += 6;
+                    break;
+                case 1: 
+                    this.currentScore[playerID] += 5;
+                    break;
+                case 2:
+                    this.currentScore[playerID] += 4;
+                    break;
+                default:
+                    break;
+            }
+            this.reserchPoint[playerID] += -8;
+            this.money[playerID] += -1;
+            //this.workerList[playerID][workerID] += -1;
+        }
+        
+        if(place.equals("5-1")){
+            switch(workerID){
+                case 2:
+                    break;
+                default:
+                    this.money[playerID] += 3;
+                    if(this.currentStartPlayer != playerID){
+                        if(this.currentStartPlayer == 0){
+                            this.currentStartPlayer = 1;
+                        }else{
+                            this.currentStartPlayer = 0;
+                        }
                     }
-                }else{
-                    if(this.gameBoard.canPutWorker(PlayerID, "P", str)){
-                        p_place.add(str);
+                    //this.workerList[playerID][workerID] += -1;
+            }
+        }
+        
+        if(place.equals("5-2")){
+            switch(workerID){
+                case 2:
+                    break;
+                default:
+                    this.money[playerID] += 5;
+                    this.reserchPoint[playerID] += -1;
+                    //this.workerList[playerID][workerID] += -1;
+            }
+        }
+        
+        if(place.equals("5-3")){
+            switch(workerID){
+                case 2:
+                    break;
+                default:
+                    this.money[playerID] += 6;
+                    this.reserchPoint[playerID] += -3;
+                    //this.workerList[playerID][workerID] += -1;
+                    this.gameBoard.setTreand(trend);
+            }
+        }
+        
+        if(place.equals("6-1")){
+            switch(workerID){
+                case 2:
+                    break;
+                default:
+                    this.money[playerID] += -3;
+                    this.workerList[playerID][2] += 1;
+                    //this.workerList[playerID][workerID] += -1;
+            }
+        }
+        
+        if(place.equals("6-2")){
+            switch(workerID){
+                case 0:
+                    if(this.currentScore[playerID] >= 10){
+                        this.workerList[playerID][2] += 1;
+                        //this.workerList[playerID][workerID] += -1;
                     }
-                    if(this.gameBoard.canPutWorker(PlayerID, "S", str)){
-                        s_place.add(str);
+                default:
+                    break;
+            }
+        }
+        this.workerList[playerID][workerID] += -1;
+        this.usedWorkerList[playerID][workerID] += 1;
+        
+    }
+    */
+    
+    //役職、置いた場所によってリソースを変化させる
+    public void ifplay(int playerID,int[] resources,String worker,String place,String trend){
+        int workerID = 0;
+        if(worker.equals("A")){
+            workerID = 1;
+        }else if(worker.equals("S")){
+            workerID = 2;
+        }
+        
+        if(place.equals("1-1")){
+            switch(workerID){
+                case 0:
+                    this.zemiCount[0] += 1;
+                    break;
+                case 1:
+                    this.zemiCount[1] += 1;
+                    break;
+                case 2:
+                    this.zemiCount[2] += 1;
+                    break;
+            }
+        }
+        
+        if(place.startsWith("2")){
+            if(resources[1] >= 2){
+                resources[1] += -2;
+            }
+            if(place.equals("2-1")){
+                resources[2] += 3;
+            }else if(place.equals("2-2")){
+                resources[2] += 4;
+            }else if(place.equals("2-3")){
+                resources[2] += 5;
+            }
+        }
+        if(place.equals("3-1")){
+            switch (workerID) {
+                case 2:
+                    resources[3] += 2;
+                    break;
+                default:
+                    resources[3] += 1;
+                    break;
+            }
+            resources[2] += -2;
+        }
+        
+        if(place.equals("3-2")){
+            switch (workerID) {
+                case 0:
+                    resources[3] += 3;
+                    break;
+                default:
+                    resources[3] += 4;
+                    break;
+            }
+            resources[2] += -4;
+            resources[1] += -1;
+        }
+        
+        if(place.equals("3-3")){
+            switch (workerID) {
+                case 0:
+                    resources[3] += 7;
+                    break;
+                case 1: 
+                    resources[3] += 6;
+                    break;
+                case 2:
+                    resources[3] += 5;
+                    break;
+                default:
+                    break;
+            }
+            resources[2] += -8;
+            resources[1] += -1;
+        }
+        
+        if(place.equals("4-1")){
+            switch (workerID) {
+                case 0:
+                    resources[3] += 8;
+                    break;
+                case 1: 
+                    resources[3] += 7;
+                    break;
+                case 2:
+                    resources[3] += 6;
+                    break;
+                default:
+                    break;
+            }
+            resources[2] += -8;
+            resources[1] += -1;
+            //this.workerList[playerID][workerID] += -1;
+        }
+        
+        if(place.equals("4-2")){
+            switch (workerID) {
+                case 0:
+                    resources[3] += 7;
+                    break;
+                case 1: 
+                    resources[3] += 6;
+                    break;
+                case 2:
+                    resources[3] += 5;
+                    break;
+                default:
+                    break;
+            }
+            resources[2] += -8;
+            resources[1] += -1;
+            //this.workerList[playerID][workerID] += -1;
+        }
+        
+        if(place.equals("4-3")){
+            switch (workerID) {
+                case 0:
+                    resources[3] += 6;
+                    break;
+                case 1: 
+                    resources[3] += 5;
+                    break;
+                case 2:
+                    resources[3] += 4;
+                    break;
+                default:
+                    break;
+            }
+            resources[2] += -8;
+            resources[1] += -1;
+            //this.workerList[playerID][workerID] += -1;
+        }
+        
+        if(place.equals("5-1")){
+            switch(workerID){
+                case 2:
+                    break;
+                default:
+                    resources[1] += 3;
+                    if(resources[7] != playerID){
+                        if(resources[7] == 0){
+                            resources[7] = 1;
+                        }else{
+                            resources[7] = 0;
+                        }
+                    }
+            }
+        }
+        
+        if(place.equals("5-2")){
+            switch(workerID){
+                case 2:
+                    break;
+                default:
+                    resources[1] += 5;
+                    resources[2] += -1;
+            }
+        }
+        
+        if(place.equals("5-3")){
+            switch(workerID){
+                case 2:
+                    break;
+                default:
+                    resources[1] += 6;
+                    resources[2] += -3;
+                    this.gameBoard.setTreand(trend);
+            }
+        }
+        
+        if(place.equals("6-1")){
+            switch(workerID){
+                case 2:
+                    break;
+                default:
+                    this.money[playerID] += -3;
+                    this.workerList[playerID][2] += 1;
+                    //this.workerList[playerID][workerID] += -1;
+            }
+        }
+        
+        if(place.equals("6-2")){
+            switch(workerID){
+                case 0:
+                    if(this.currentScore[playerID] >= 10){
+                        this.workerList[playerID][2] += 1;
+                        //this.workerList[playerID][workerID] += -1;
+                    }
+                default:
+                    break;
+            }
+        }
+        this.workerList[playerID][workerID] += -1;
+        this.usedWorkerList[playerID][workerID] += 1;
+        
+    }
+    
+    //PlayerIDを指定し、そのプレイヤーが
+    public int confirmHasWorker(int playerID){
+        int workers = 0;
+        for(int i = 0; i < 3; i++){
+            workers += this.workerList[playerID][i];
+        }
+        return workers;
+    }
+    
+    //手番の変更
+    public void changePlayer(){
+        if(this.confirmHasWorker((this.changeFlag + 1 )% 2) >= 0){
+            this.changeFlag = (this.changeFlag + 1 )% 2;
+        }
+    }
+    //季節の変更
+    public void changeSeason(){
+        for(int i = 0;i<2;i++){
+            for(int j=0;j<3;j++){
+                this.workerList[i][j] = this.usedWorkerList[i][j];
+                this.usedWorkerList[i][j] = 0;
+            }
+        }
+        //ゼミに置いた時の処理
+        this.reserchPoint[0] += this.zemiCount[0] * 2 + this.zemiCount[1] * 3 +
+                                ( (this.zemiCount[2] / 2) * (this.zemiCount[0] + this.zemiCount[1]) );
+        this.reserchPoint[1] += this.zemiCount[0] * 2 + this.zemiCount[1] * 3 +
+                                ( (this.zemiCount[2] / 2) * (this.zemiCount[0] + this.zemiCount[1]) );
+        for(int i = 0; i <3; i++){
+            this.zemiCount[i] = 0;
+        }
+    }
+    
+    public String search(int depth,int myPlayerID){
+        //this.setResource(depth, myPlayerID);
+        //for(int i = 0; i < depth; i++){
+        i++;
+        this.operateResources = this.resources[i];
+        this.operateTrend = this.ifTrend[i];
+        while(i < depth){
+            this.searchCanputPlace(myPlayerID, i);
+            for(int k = i * 3; k < (i * 3) + 3; k++){
+                for(int j = 0; j < 15; j++){
+                    if(this.CANPUT_PLACE[k][j]){
+                        //ここで置いた場所によるリソースの変化を計算
+                        
+                        
+                        this.search(depth,(myPlayerID + 1) % 2);
                     }
                 }
-                str = place.get(i);
             }
-            p_place.add(str);
-            s_place.add(str);
         }
+        //木の一番下まで到達
+        //評価
+        return "1-1";
     }
     
-    
-    
-    public String my_minimax(int hukasa,int Player0_Money,int Player0_ResearchPoint, int Player0_Score,
-                            int Player1_Money,int Player1_ResearchPoint, int Player1_Score,
-                            //ArrayList<String> m_place, ArrayList<String> y_place,
-                            ArrayList<String> m_p_place, ArrayList<String> m_s_place,
-                            ArrayList<String> y_p_place, ArrayList<String> y_s_place){
-        //this.boardCanputPlace(0, m_place);
-        //this.boardCanputPlace(0, y_place);
-        //this.workerCanputPlace(0, m_place, m_p_place, m_s_place);
-        //this.workerCanputPlace(1, y_place, y_p_place, y_s_place);
-        
-        String str = m_p_place.get(0);
-        for(int i =1; !"Last".equals(str); i++){
-            if(str.startsWith("2")){
-                Player0_Money += -2;
-            }
-            
-            
-        }
-        
-         str = "";
-        return str;
-    }
-    
-    public String your_minimax(int hukasa,int Player0_Money,int Player0_ResearchPoint, int Player0_Score,
-                            int Player1_Money,int Player1_ResearchPoint, int Player1_Score,
-                            ArrayList<String> m_place, ArrayList<String> y_place,
-                            ArrayList<String> m_p_place, ArrayList<String> m_s_place,
-                            ArrayList<String> y_p_place, ArrayList<String> y_s_place){
-        String str = "";
-        return str;
-    }
+    //-193point!!!
     
     //ランダムに次の手を作成するメソッド。返り値はString 置ける場所
     //シーズンがわかるなら返り値にすると、そのシーズンでやった方がよい手が打てる

@@ -55,6 +55,10 @@ public class GameResources {
     public void addMoney(int i) {
         this.money += i;
     }
+    
+    public int[] getWorkers(){
+        return this.workerList;
+    }
 
     public void putWorker(String typeOfWorker) {
         if(this.hasWorkerOf(typeOfWorker)){

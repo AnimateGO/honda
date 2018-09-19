@@ -50,11 +50,32 @@ public class Game extends Observable{
         return this.PlayerName;
     }
     
+    public int[] getMoney(){
+        int[] money = new int[2];
+        money[0] = this.gameResource[0].getCurrentMoney();
+        money[1] = this.gameResource[1].getCurrentMoney();
+        return money;
+    }
+    
+    public int[] getReserchPoint(){
+        int[] reserchPoint = new int[2];
+        reserchPoint[0] = this.gameResource[0].getCurrentResrchPoint();
+        reserchPoint[1] = this.gameResource[1].getCurrentResrchPoint();
+        return reserchPoint;
+    }
+    
     public int[] getScore(){
         int[] score = new int[2];
         score[0] = this.gameResource[0].getTotalScore();
-        score[1] = this.gameResource[0].getTotalScore();
+        score[1] = this.gameResource[1].getTotalScore();
         return score;
+    }
+    
+    public int[][] getWorkerList(){
+        int[][] workerList = new int[2][3];
+        workerList[0] = this.gameResource[0].getWorkers();
+        workerList[1] = this.gameResource[1].getWorkers();
+        return workerList;
     }
     
     public int getCurrentPlayer(){
