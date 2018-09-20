@@ -45,17 +45,20 @@ public abstract class LaboAI implements MessageRecevable{
     private int[][] resources;
     private int[] operateResources;
     private String operateTrend;
+    private int[][] evaluationList;
     private int i;
+    
   
     public LaboAI(Game game){
         this.CANPUT_PLACE = new boolean[30][15];
+        this.evaluationList = new int[30][15];
         this.money = new int[2];
         this.reserchPoint = new int[2];
         this.currentScore = new int[2];
         this.workerList = new int[2][3];
         this.usedWorkerList = new int[2][3];
         this.zemiCount = new int[3];
-        this.resources = new int [10][8];
+        this.resources = new int [10][11];
         this.operateResources = new int[8];
         this.currentStartPlayer = 0;
         this.changeFlag = 0;
@@ -233,7 +236,7 @@ public abstract class LaboAI implements MessageRecevable{
         this.resources[depth][4] = this.workerList[playerID][0];
         this.resources[depth][5] = this.workerList[playerID][1];
         this.resources[depth][6] = this.workerList[playerID][2];
-        this.resources[depth][7] = this.currentStartPlayer;
+        this.resources[depth][10] = this.currentStartPlayer;
         this.ifTrend[depth] = this.trend;
         
     }
@@ -459,7 +462,7 @@ public abstract class LaboAI implements MessageRecevable{
     */
     
     //役職、置いた場所によってリソースを変化させる
-    public void ifplay(int playerID,int[] resources,String worker,String place,String trend){
+    public void ifplay(int[] resources,String worker,String place,String trend){
         int workerID = 0;
         if(worker.equals("A")){
             workerID = 1;
@@ -599,7 +602,7 @@ public abstract class LaboAI implements MessageRecevable{
                     break;
                 default:
                     resources[1] += 3;
-                    if(resources[7] != playerID){
+                    if(resources[7] != resources[0]){
                         if(resources[7] == 0){
                             resources[7] = 1;
                         }else{
@@ -636,7 +639,7 @@ public abstract class LaboAI implements MessageRecevable{
                     break;
                 default:
                     resources[2] += -3;
-                    this.workerList[playerID][2] += 1;
+                    resources[6] += 1;
                     //this.workerList[playerID][workerID] += -1;
             }
         }
@@ -644,35 +647,37 @@ public abstract class LaboAI implements MessageRecevable{
         if(place.equals("6-2")){
             switch(workerID){
                 case 0:
-                    if(this.currentScore[playerID] >= 10){
-                        this.workerList[playerID][2] += 1;
+                    if(resources[3] >= 10){
+                       resources[5] += 1;
                         //this.workerList[playerID][workerID] += -1;
                     }
                 default:
                     break;
             }
         }
-        this.workerList[playerID][workerID] += -1;
-        this.usedWorkerList[playerID][workerID] += 1;
+        resources[workerID + 4] += -1;
+        resources[workerID + 7] += 1;
         
     }
     
-    //PlayerIDを指定し、そのプレイヤーが
-    public int confirmHasWorker(int playerID){
+    //resourcesの中の動ける駒を確認
+    public int confirmHasWorker(int[] resources){
         int workers = 0;
-        for(int i = 0; i < 3; i++){
-            workers += this.workerList[playerID][i];
+        for(int i = 4; i < 7; i++){
+            workers += resources[i];
         }
         return workers;
     }
     
     //手番の変更
-    public void changePlayer(){
-        if(this.confirmHasWorker((this.changeFlag + 1 )% 2) >= 0){
+    public void changePlayer(int[] resources){
+        //if(this.confirmHasWorker((this.changeFlag + 1 )% 2) >= 0){
+        if(this.confirmHasWorker(resources) >= 0){
             this.changeFlag = (this.changeFlag + 1 )% 2;
         }
     }
     //季節の変更
+    //今のプレイヤーとその前に動いた
     public void changeSeason(){
         for(int i = 0;i<2;i++){
             for(int j=0;j<3;j++){
@@ -690,11 +695,11 @@ public abstract class LaboAI implements MessageRecevable{
         }
     }
     
-    public String search(int depth,int myPlayerID){
+    public int search(int depth,int PlayerID, int[] resources){
         //this.setResource(depth, myPlayerID);
         //for(int i = 0; i < depth; i++){
         i++;
-        this.operateResources = this.resources[i];
+        this.operateResources = resources;
         this.operateTrend = this.ifTrend[i];
         while(i < depth){
             this.searchCanputPlace(this.operateResources, i);
@@ -704,20 +709,23 @@ public abstract class LaboAI implements MessageRecevable{
                         //ここで置いた場所によるリソースの変化を計算
                         switch(k % 3){
                             case 0:
-                                this.ifplay(myPlayerID, this.operateResources, "P", this.PLACE_NAMES[j], this.operateTrend);
+                                this.ifplay(this.operateResources, "P", this.PLACE_NAMES[j], this.operateTrend);
                             case 1:
-                                this.ifplay(myPlayerID, this.operateResources, "A", this.PLACE_NAMES[j], this.operateTrend);
+                                this.ifplay(this.operateResources, "A", this.PLACE_NAMES[j], this.operateTrend);
                             case 2:
-                                this.ifplay(myPlayerID, this.operateResources, "S", this.PLACE_NAMES[j], this.operateTrend);
+                                this.ifplay(this.operateResources, "S", this.PLACE_NAMES[j], this.operateTrend);
                         }
-                        this.search(depth,(myPlayerID + 1) % 2);
+                        if(this.confirmHasWorker(this.operateResources) == 0){
+                            this.changeSeason();
+                        }
+                        this.evaluationList[k][j] = this.search(depth,(PlayerID + 1) % 2, this.operateResources);
                     }
                 }
             }
         }
         //木の一番下まで到達
         //評価
-        return "1-1";
+        return this.operateResources[1] + this.operateResources[2];
     }
     
     //-193point!!!
