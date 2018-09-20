@@ -77,6 +77,67 @@ public abstract class LaboAI implements MessageRecevable{
     
     public abstract void setOutputInterface(MessageRecevable mr);
     
+    public boolean canPutWorker(int[] resources,String typeOfWorker,String place){
+        if(place.startsWith("2")){
+            if(resources[1] >= 2){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if(place.equals("3-1")){
+            if(resources[2] >= 2){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if(place.equals("3-2")){
+            if(resources[2] >= 4 && resources[1] >= 1){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if(place.equals("3-3")){
+            if(resources[2] >= 8 && resources[1] >= 1){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if(place.startsWith("4")){
+            if(resources[2] >= 8 && resources[1] >= 1){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        //タイプが問題ないかを確認
+        if(place.startsWith("5")){
+            if(typeOfWorker.equals("P") || typeOfWorker.equals("A")){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if(place.equals("6-1")){
+            if(typeOfWorker.equals("P") || typeOfWorker.equals("A")){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if(place.equals("6-2")){
+            if(typeOfWorker.equals("P") || resources[3] >= 10){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    /*
     public boolean canPutWorker(int player,String typeOfWorker,String place){
         if(place.startsWith("2")){
             if(this.money[player] >= 2){
@@ -137,18 +198,19 @@ public abstract class LaboAI implements MessageRecevable{
         }
         return false;
     }
+    */
     
     //playerID（0,1で指定）して、そのプレイヤーの置ける場所を検索
-    public void searchCanputPlace(int playerID,int depth){
+    public void searchCanputPlace(int[] resources,int depth){
         for(int i = depth * 3; i < (depth * 3 + 3); i++){
             for(int j = 0; j < 15; j++){
-            CANPUT_PLACE[i][j] = this.canPutWorker(playerID, "P", PLACE_NAMES[j]);
+            CANPUT_PLACE[i][j] = this.canPutWorker(resources, "P", PLACE_NAMES[j]);
             }
             for(int j = 0; j < 15; j++){
-            CANPUT_PLACE[i][j] = this.canPutWorker(playerID, "A", PLACE_NAMES[j]);
+            CANPUT_PLACE[i][j] = this.canPutWorker(resources, "A", PLACE_NAMES[j]);
             }
             for(int j = 0; j < 15; j++){
-            CANPUT_PLACE[i][j] = this.canPutWorker(playerID, "S", PLACE_NAMES[j]);
+            CANPUT_PLACE[i][j] = this.canPutWorker(resources, "S", PLACE_NAMES[j]);
             }
         }
     }
@@ -573,7 +635,7 @@ public abstract class LaboAI implements MessageRecevable{
                 case 2:
                     break;
                 default:
-                    this.money[playerID] += -3;
+                    resources[2] += -3;
                     this.workerList[playerID][2] += 1;
                     //this.workerList[playerID][workerID] += -1;
             }
@@ -635,13 +697,19 @@ public abstract class LaboAI implements MessageRecevable{
         this.operateResources = this.resources[i];
         this.operateTrend = this.ifTrend[i];
         while(i < depth){
-            this.searchCanputPlace(myPlayerID, i);
+            this.searchCanputPlace(this.operateResources, i);
             for(int k = i * 3; k < (i * 3) + 3; k++){
                 for(int j = 0; j < 15; j++){
                     if(this.CANPUT_PLACE[k][j]){
                         //ここで置いた場所によるリソースの変化を計算
-                        
-                        
+                        switch(k % 3){
+                            case 0:
+                                this.ifplay(myPlayerID, this.operateResources, "P", this.PLACE_NAMES[j], this.operateTrend);
+                            case 1:
+                                this.ifplay(myPlayerID, this.operateResources, "A", this.PLACE_NAMES[j], this.operateTrend);
+                            case 2:
+                                this.ifplay(myPlayerID, this.operateResources, "S", this.PLACE_NAMES[j], this.operateTrend);
+                        }
                         this.search(depth,(myPlayerID + 1) % 2);
                     }
                 }
