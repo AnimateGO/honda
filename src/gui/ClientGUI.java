@@ -37,14 +37,23 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
 
     private String defaultIP;
     private String defaultPort = "18420";
+    
+    String[] PLACE_NAMES = {"1-1","2-1","2-2","2-3","3-1","3-2","3-3","4-1","4-2","4-3","5-1","5-2","5-3","6-1","6-2"};
 
-    int playerID;
+    int myPlayerID;
     ArrayList player_0 = new ArrayList();
     ArrayList player_1 = new ArrayList();
     ArrayList board = new ArrayList();
     ArrayList season = new ArrayList();
     ArrayList trend = new ArrayList();
     ArrayList score = new ArrayList();
+    String[] opponent = new String[3];
+    int[] returnResult = new int[3];
+    String returnWorker;
+    String returnPlace;
+    int[][] guiResources = new int[2][13];
+    String nowTrend;
+    String nowSeason;
 
     /**
      * コンストラクタ　文字の表示部分のみを初期化する
@@ -288,17 +297,39 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
             if("100 HELLO".equals(text)){
                 String sendRanText = "101 NAME YAMADALAB";
                 this.sendMessage(sendRanText);
+                this.guiResources = this.myAI.firstSetResource();
             }
 
             if("102 PLAYERID 0".equals(text)){
-                playerID = 0;
+                myPlayerID = 0;
             }else if("102 PLAYERID 1".equals(text)){
-                playerID = 1;
+                myPlayerID = 1;
             }
 
             if("204 DOPLAY".equals(text)){
                 //パターンマッチングで情報を挿入
                 this.sendMessage("210 CONFPRM");
+                //探索
+                this.returnResult = this.myAI.search(3, myPlayerID, this.guiResources[myPlayerID], this.guiResources[myPlayerID], this.guiResources[(myPlayerID + 1) % 2], myPlayerID);
+                //駒の取り出し
+                if(this.returnResult[1] == 0){
+                    this.returnWorker = "P";
+                }else if(this.returnResult[1] == 1){
+                    this.returnWorker = "A";
+                }else if(this.returnResult[2] == 2){
+                    this.returnWorker = "S";
+                }
+                //場所の取り出し
+                this.returnPlace = this.PLACE_NAMES[this.returnResult[2]];
+                
+                //5-3に置くときだけはトレンドの指定が必要（トレンドは固定にする。というか面倒でそれしか実装できんかった）
+                String sendRanText;
+                if(this.returnPlace == "5-3"){
+                    sendRanText = "205 PLAY " + myPlayerID + " " + "5-3 T1";
+                }else{
+                    sendRanText = "205 PLAY " + myPlayerID + " " + this.returnPlace;
+                }
+                this.sendMessage(sendRanText);
 
 
                 //ランダムで打つ場所、打つ役職を決定
@@ -319,10 +350,16 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
             //正規表現でリソース情報を抜き取る
             if(text.startsWith("211")) {
                 //211_RESOURCES_0_P1_A(0)_S(1)_M(0)_R(0)
-                Pattern resources = Pattern.compile("(211)\\s(.*)\\s(0|1)\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9]+)\\s(.)([0-9]+)\\s(.)([0-9]+)");
+                Pattern resources = Pattern.compile("(211)\\s(.*)\\s(0|1)\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9])\\s(.)([1-9]*)([0-9]+)\\s(.)([1-9]*)([0-9]+)\\s(.)([0-9]+)");
                 Matcher mc = resources.matcher(str);
                 mc.find();
                 int player_id = Integer.parseInt(mc.group(3));
+                this.guiResources[player_id][0] = player_id;
+                this.guiResources[player_id][1] = Integer.parseInt( mc.group(11) + mc.group(12) );
+                this.guiResources[player_id][2] = Integer.parseInt( mc.group(14) + mc.group(15) );
+                this.guiResources[player_id][4] = Integer.parseInt(mc.group(5));
+                this.guiResources[player_id][5] = Integer.parseInt(mc.group(7));
+                this.guiResources[player_id][6] = Integer.parseInt(mc.group(9));
 
                 if (player_id == 0) {
                     int i = 5;
@@ -358,6 +395,7 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                 mc3.find();
                 int i = 3;
                 season.add(mc3.group(i)+mc3.group(i+1));
+                this.nowSeason = (mc3.group(i)+mc3.group(i+1));
             }
 
             //トレンド
@@ -367,6 +405,7 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                 mc4.find();
                 int i = 4;
                 trend.add("T" + mc4.group(i));
+                this.nowTrend = ("T" + mc4.group(i));
             }
 
             //スコア
@@ -376,10 +415,26 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                 mc5.find();
                 int i = 4;
                 score.add("T" + mc5.group(i));
+                this.guiResources[0][3] = Integer.parseInt(mc5.group(5));
+                this.guiResources[1][3] = Integer.parseInt(mc5.group(6));
                 while(i < 7) {
                     i++;
                     score.add(Integer.parseInt(mc5.group(i)));
                 }
+            }
+            
+            //スタートプレイヤー
+            
+            if(text.startsWith("206")){
+                Pattern opponent_info = Pattern.compile("(206)\\s(.*)\\s(0|1)\\s([PAS])\\s([1-6])(-)([1-3])");
+                Matcher mc6 = opponent_info.matcher(str);
+                mc6.find();
+                int i = 4;
+                while(i < 6){
+                    opponent[i-4] = mc6.group(i);
+                    i++;
+                }
+                
             }
 
             this.jTextPane1.setCaretPosition(document.getLength());
