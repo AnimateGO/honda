@@ -61,18 +61,11 @@ public abstract class LaboAI implements MessageRecevable{
   
     public LaboAI(Game game){
         this.CANPUT_PLACE = new boolean[30][15];
-        this.evaluationList = new int[30][15];
-        this.money = new int[2];
-        this.reserchPoint = new int[2];
-        this.currentScore = new int[2];
-        this.workerList = new int[2][3];
-        this.usedWorkerList = new int[2][3];
         this.zemiCount = new int[3];
         this.resources = new int [10][13];
         this.operateResources = new int[13];
         this.currentStartPlayer = 0;
         this.changePlayerFlag = 0;
-        this.gameBoard = game;
         this.ifTrend = new String[10];
         this.defaultResources = new int[2][13];
         this.evaluation = new int[3];
@@ -158,68 +151,7 @@ public abstract class LaboAI implements MessageRecevable{
         }
         return false;
     }
-    /*
-    public boolean canPutWorker(int player,String typeOfWorker,String place){
-        if(place.startsWith("2")){
-            if(this.money[player] >= 2){
-                return true;
-            } else {
-                return false;
-            }
-        }
-        if(place.equals("3-1")){
-            if(this.reserchPoint[player] >= 2){
-                return true;
-            } else {
-                return false;
-            }
-        }
-        if(place.equals("3-2")){
-            if(this.reserchPoint[player] >= 4 && this.money[player] >= 1){
-                return true;
-            } else {
-                return false;
-            }
-        }
-        if(place.equals("3-3")){
-            if(this.reserchPoint[player] >= 8 && this.money[player] >= 1){
-                return true;
-            } else {
-                return false;
-            }
-        }
-        if(place.startsWith("4")){
-            if(this.reserchPoint[player] >= 8 && this.money[player] >= 1){
-                return true;
-            } else {
-                return false;
-            }
-        }
-        //タイプが問題ないかを確認
-        if(place.startsWith("5")){
-            if(typeOfWorker.equals("P") || typeOfWorker.equals("A")){
-                return true;
-            } else {
-                return false;
-            }
-        }
-        if(place.equals("6-1")){
-            if(typeOfWorker.equals("P") || typeOfWorker.equals("A")){
-                return true;
-            } else {
-                return false;
-            }
-        }
-        if(place.equals("6-2")){
-            if(typeOfWorker.equals("P") || this.currentScore[player] >= 10){
-                return true;
-            } else {
-                return false;
-            }
-        }
-        return false;
-    }
-    */
+    
     
     //playerID（0,1で指定）して、そのプレイヤーの置ける場所を検索
     public void searchCanputPlace(int[] resources,int depth){
@@ -281,226 +213,7 @@ public abstract class LaboAI implements MessageRecevable{
         
     }
     
-    /*
-    //役職、置いた場所によってリソースを変化させる
-    public void ifplay(int playerID,int[] resources,String worker,String place,String trend){
-        int workerID = 0;
-        if(worker.equals("A")){
-            workerID = 1;
-        }else if(worker.equals("S")){
-            workerID = 2;
-        }
-        
-        if(place.equals("1-1")){
-            switch(workerID){
-                case 0:
-                    this.zemiCount[0] += 1;
-                    break;
-                case 1:
-                    this.zemiCount[1] += 1;
-                    break;
-                case 2:
-                    this.zemiCount[2] += 1;
-                    break;
-            }
-            //this.workerList[playerID][workerID] += -1;
-        }
-        
-        if(place.startsWith("2")){
-            if(this.money[playerID] >= 2){
-                this.money[playerID] += -2;
-            }
-            if(place.equals("2-1")){
-                this.reserchPoint[playerID] += 3;
-            }else if(place.equals("2-2")){
-                this.reserchPoint[playerID] += 4;
-            }else if(place.equals("2-3")){
-                this.reserchPoint[playerID] += 5;
-            }
-            //this.workerList[playerID][workerID] += -1;
-        } else {
-        }
-        if(place.equals("3-1")){
-            switch (workerID) {
-                case 0:
-                    this.currentScore[playerID] += 1;
-                    break;
-                case 1: 
-                    this.currentScore[playerID] += 1;
-                    break;
-                case 2:
-                    this.currentScore[playerID] += 2;
-                    break;
-                default:
-                    break;
-            }
-            this.reserchPoint[playerID] += -2;
-            //this.workerList[playerID][workerID] += -1;
-        }
-        
-        if(place.equals("3-2")){
-            switch (workerID) {
-                case 0:
-                    this.currentScore[playerID] += 3;
-                    break;
-                case 1: 
-                    this.currentScore[playerID] += 4;
-                    break;
-                case 2:
-                    this.currentScore[playerID] += 4;
-                    break;
-                default:
-                    break;
-            }
-            this.reserchPoint[playerID] += -4;
-            this.money[playerID] += -1;
-            //this.workerList[playerID][workerID] += -1;
-        }
-        
-        if(place.equals("3-3")){
-            switch (workerID) {
-                case 0:
-                    this.currentScore[playerID] += 7;
-                    break;
-                case 1: 
-                    this.currentScore[playerID] += 6;
-                    break;
-                case 2:
-                    this.currentScore[playerID] += 5;
-                    break;
-                default:
-                    break;
-            }
-            this.reserchPoint[playerID] += -8;
-            this.money[playerID] += -1;
-            //this.workerList[playerID][workerID] += -1;
-        }
-        
-        if(place.equals("4-1")){
-            switch (workerID) {
-                case 0:
-                    this.currentScore[playerID] += 8;
-                    break;
-                case 1: 
-                    this.currentScore[playerID] += 7;
-                    break;
-                case 2:
-                    this.currentScore[playerID] += 6;
-                    break;
-                default:
-                    break;
-            }
-            this.reserchPoint[playerID] += -8;
-            this.money[playerID] += -1;
-            //this.workerList[playerID][workerID] += -1;
-        }
-        
-        if(place.equals("4-2")){
-            switch (workerID) {
-                case 0:
-                    this.currentScore[playerID] += 7;
-                    break;
-                case 1: 
-                    this.currentScore[playerID] += 6;
-                    break;
-                case 2:
-                    this.currentScore[playerID] += 5;
-                    break;
-                default:
-                    break;
-            }
-            this.reserchPoint[playerID] += -8;
-            this.money[playerID] += -1;
-            //this.workerList[playerID][workerID] += -1;
-        }
-        
-        if(place.equals("4-3")){
-            switch (workerID) {
-                case 0:
-                    this.currentScore[playerID] += 6;
-                    break;
-                case 1: 
-                    this.currentScore[playerID] += 5;
-                    break;
-                case 2:
-                    this.currentScore[playerID] += 4;
-                    break;
-                default:
-                    break;
-            }
-            this.reserchPoint[playerID] += -8;
-            this.money[playerID] += -1;
-            //this.workerList[playerID][workerID] += -1;
-        }
-        
-        if(place.equals("5-1")){
-            switch(workerID){
-                case 2:
-                    break;
-                default:
-                    this.money[playerID] += 3;
-                    if(this.currentStartPlayer != playerID){
-                        if(this.currentStartPlayer == 0){
-                            this.currentStartPlayer = 1;
-                        }else{
-                            this.currentStartPlayer = 0;
-                        }
-                    }
-                    //this.workerList[playerID][workerID] += -1;
-            }
-        }
-        
-        if(place.equals("5-2")){
-            switch(workerID){
-                case 2:
-                    break;
-                default:
-                    this.money[playerID] += 5;
-                    this.reserchPoint[playerID] += -1;
-                    //this.workerList[playerID][workerID] += -1;
-            }
-        }
-        
-        if(place.equals("5-3")){
-            switch(workerID){
-                case 2:
-                    break;
-                default:
-                    this.money[playerID] += 6;
-                    this.reserchPoint[playerID] += -3;
-                    //this.workerList[playerID][workerID] += -1;
-                    this.gameBoard.setTreand(trend);
-            }
-        }
-        
-        if(place.equals("6-1")){
-            switch(workerID){
-                case 2:
-                    break;
-                default:
-                    this.money[playerID] += -3;
-                    this.workerList[playerID][2] += 1;
-                    //this.workerList[playerID][workerID] += -1;
-            }
-        }
-        
-        if(place.equals("6-2")){
-            switch(workerID){
-                case 0:
-                    if(this.currentScore[playerID] >= 10){
-                        this.workerList[playerID][2] += 1;
-                        //this.workerList[playerID][workerID] += -1;
-                    }
-                default:
-                    break;
-            }
-        }
-        this.workerList[playerID][workerID] += -1;
-        this.usedWorkerList[playerID][workerID] += 1;
-        
-    }
-    */
-    
+   
     //役職、置いた場所によってリソースを変化させる
     public void ifplay(int[] resources,String worker,String place,String trend){
         int workerID = 0;
@@ -796,6 +509,7 @@ public abstract class LaboAI implements MessageRecevable{
     }
     
     public int[] search(int depth,int PlayerID, int[] resources, int[] myResources, int[] youResources,int myPlayerID){
+        System.out.print("loopin");
         //for(int i = 0; i < depth; i++){
         if(PlayerID != resources[0]) {
             resources[0] = PlayerID;
@@ -834,10 +548,12 @@ public abstract class LaboAI implements MessageRecevable{
                         //1手前のリソースで動ける駒がいない場合は季節を変更
                         //1手前のプレイヤーで動ける駒がないなら今動いたプレイヤーも動ける駒はいないと思われる理論
                         //どっちかだけ動ける場合はPlayerIDを+1して連続して行動を行う
-                        if(this.confirmHasWorker(this.resources[i-1]) == 0 && this.confirmHasWorker(this.operateResources) > 0){
+                        if(i != 0){
+                            if(this.confirmHasWorker(this.resources[i-1]) == 0 && this.confirmHasWorker(this.operateResources) > 0){
                                 this.operateResources[0] += 1;
-                        }else if(this.confirmHasWorker(this.resources[i-1]) == 0){
-                            this.changeSeason(this.operateResources,this.resources[this.lastPlayerResourceNo],this.operateTrend);
+                            }else if(this.confirmHasWorker(this.resources[i-1]) == 0){
+                                this.changeSeason(this.operateResources,this.resources[this.lastPlayerResourceNo],this.operateTrend);
+                            }
                         }
                         
                         //木を1つ下にくだる
@@ -882,7 +598,7 @@ public abstract class LaboAI implements MessageRecevable{
             }
             //既にthis.evaluationに値が入っていた時(多分0以上)はthis.evaluationと値を比較して、新しいほうが小さかったら評価値を-1にしてそこの探索を終了する
             //評価関数
-            this.result[0] = this.operateResources[1] + this.operateResources[2];
+            this.result[0] = this.operateResources[1];
             //置く駒の種類と置く場所を保存
             this.result[1] = this.operateResources[11];
             this.result[2] = this.operateResources[12];
@@ -895,64 +611,6 @@ public abstract class LaboAI implements MessageRecevable{
         i--;
         return this.result;
     }
+}
     
     //-193point!!!
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    //ランダムに次の手を作成するメソッド。返り値はString 置ける場所
-    //シーズンがわかるなら返り値にすると、そのシーズンでやった方がよい手が打てる
-    public String RandomPut_place(String season){
-        String place ;
-        java.util.Random random = new java.util.Random();
-        if(season == "1a" || season == "1b"){
-            int i = random.nextInt(5);
-            place = this.S1_PLACE_NAMES[i];
-        }else if(season == "2a" || season == "2b"){
-            int i = random.nextInt(7);
-            place = this.S2_PLACE_NAMES[i];
-        }else{
-            int i = random.nextInt(10);
-            place = this.S3_PLACE_NAMES[i];
-        }
-        /*
-        if(str[0].startsWith("5")){
-            str[1] = "P";
-        }else{
-            str[1] = "S";
-        }
-        times +=1;
-        */
-        return place;
-    }
-    
-    //資金のとこに教授置かないと話にならないので5で始まる場所の時は教授を、それ以外は学生を返す
-    //5で始まらない場合は教授と助手ランダムに打つ
-    public String RandomPut_worker(String str){
-        String[] workers = {"P","S"};
-        String worker;
-        java.util.Random random = new java.util.Random();
-        if(str.startsWith("5")){
-            worker = "P";
-        }else{
-            int i = random.nextInt(2);
-            worker = workers[i];
-        }
-        return worker;
-    }
-    
-}

@@ -309,6 +309,103 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
             if("204 DOPLAY".equals(text)){
                 //パターンマッチングで情報を挿入
                 this.sendMessage("210 CONFPRM");
+            }
+            
+            String str = text;
+
+            //正規表現でリソース情報を抜き取る
+            if(text.startsWith("211")) {
+                //211_RESOURCES_0_P1_A(0)_S(1)_M(0)_R(0)
+                Pattern resources = Pattern.compile("(211)\\s(.*)\\s(0|1)\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9])\\s(.)([1-9]*)([0-9]+)\\s(.)([1-9]*)([0-9]+)\\s(.)([0-9]+)");
+                Matcher mc = resources.matcher(str);
+                mc.find();
+                int player_id = Integer.parseInt(mc.group(3));
+                this.guiResources[player_id][0] = player_id;
+                this.guiResources[player_id][1] = Integer.parseInt( mc.group(11) + mc.group(12) );
+                this.guiResources[player_id][2] = Integer.parseInt( mc.group(14) + mc.group(15) );
+                this.guiResources[player_id][4] = Integer.parseInt(mc.group(5));
+                this.guiResources[player_id][5] = Integer.parseInt(mc.group(7));
+                this.guiResources[player_id][6] = Integer.parseInt(mc.group(9));
+                /*
+                if (player_id == 0) {
+                    int i = 5;
+                    while (i < 15) {
+                        player_0.add(Integer.parseInt(mc.group(i)));
+                        i = i + 2;
+                    }
+                } else if (player_id == 1) {
+                    int i = 5;
+                    while (i < 15) {
+                        player_1.add(Integer.parseInt(mc.group(i)));
+                        i = i + 2;
+                    }
+                }
+                */
+            }
+
+            //ボードの配置
+            /*
+            else if(text.startsWith("212")){
+                Pattern board_info = Pattern.compile("(212)\\s(.*)\\s([1-6])(-)([1-3])\\s([PAS])\\s([01])");
+                Matcher mc2 = board_info.matcher(str);
+                mc2.find();
+                int i = 3;
+                while(i < 8){
+                    board.add(mc2.group(i));
+                    i++;
+                }
+            }
+            */
+
+            //シーズン
+            else if(text.startsWith("213")){
+                Pattern season_info = Pattern.compile("(213)\\s(.*)\\s([1-6])([ab])");
+                Matcher mc3 = season_info.matcher(str);
+                mc3.find();
+                int i = 3;
+                //season.add(mc3.group(i)+mc3.group(i+1));
+                this.nowSeason = (mc3.group(i)+mc3.group(i+1));
+            }
+
+            //トレンド
+            else if(text.startsWith("214")){
+                Pattern trend_info = Pattern.compile("(214)\\s(.*)\\s(T)([0-3])");
+                Matcher mc4 = trend_info.matcher(str);
+                mc4.find();
+                int i = 4;
+                //trend.add("T" + mc4.group(i));
+                this.nowTrend = ("T" + mc4.group(i));
+            }
+
+            //スコア
+            else if(text.startsWith("215")){
+                Pattern score_info = Pattern.compile("(215)\\s(.*)\\s(T)([1-3])\\s([0-9]+)\\s([0-9]+)");
+                Matcher mc5 = score_info.matcher(str);
+                mc5.find();
+                int i = 4;
+                score.add("T" + mc5.group(i));
+                this.guiResources[0][3] = Integer.parseInt(mc5.group(5));
+                this.guiResources[1][3] = Integer.parseInt(mc5.group(6));
+                /*
+                while(i < 7) {
+                    i++;
+                    score.add(Integer.parseInt(mc5.group(i)));
+                }
+                */
+            }
+            
+            if(text.startsWith("206")){
+                Pattern opponent_info = Pattern.compile("(206)\\s(.*)\\s(0|1)\\s([PAS])\\s([1-6])(-)([1-3])");
+                Matcher mc6 = opponent_info.matcher(str);
+                mc6.find();
+                int i = 4;
+                while(i < 6){
+                    opponent[i-4] = mc6.group(i);
+                    i++;
+                }
+            }
+            
+            if(text.startsWith("202")){
                 //探索
                 this.returnResult = this.myAI.search(3, myPlayerID, this.guiResources[myPlayerID], this.guiResources[myPlayerID], this.guiResources[(myPlayerID + 1) % 2], myPlayerID);
                 //駒の取り出し
@@ -325,116 +422,11 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                 //5-3に置くときだけはトレンドの指定が必要（トレンドは固定にする。というか面倒でそれしか実装できんかった）
                 String sendRanText;
                 if(this.returnPlace == "5-3"){
-                    sendRanText = "205 PLAY " + myPlayerID + " " + "5-3 T1";
+                    sendRanText = "205 PLAY " + myPlayerID + " " + this.returnWorker + " 5-3 T1";
                 }else{
-                    sendRanText = "205 PLAY " + myPlayerID + " " + this.returnPlace;
+                    sendRanText = "205 PLAY " + myPlayerID + " " + this.returnWorker + " " + this.returnPlace;
                 }
                 this.sendMessage(sendRanText);
-
-
-                //ランダムで打つ場所、打つ役職を決定
-//                String season = "";
-//                String place = this.myAI.RandomPut_place(season);
-//                String worker = this.myAI.RandomPut_worker(place);
-//
-//                if(playerID == 0){
-//                    String sendRanText0 = "205 PLAY 0 "+worker+" "+place;
-//                    this.sendMessage(sendRanText0);
-//                }else if(playerID == 1){
-//                    String sendRanText1 = "205 PLAY 1 "+worker+" "+place;
-//                    this.sendMessage(sendRanText1);
-//                }
-            }
-            String str = text;
-
-            //正規表現でリソース情報を抜き取る
-            if(text.startsWith("211")) {
-                //211_RESOURCES_0_P1_A(0)_S(1)_M(0)_R(0)
-                Pattern resources = Pattern.compile("(211)\\s(.*)\\s(0|1)\\s(.)([0-9])\\s(.)([0-9])\\s(.)([0-9])\\s(.)([1-9]*)([0-9]+)\\s(.)([1-9]*)([0-9]+)\\s(.)([0-9]+)");
-                Matcher mc = resources.matcher(str);
-                mc.find();
-                int player_id = Integer.parseInt(mc.group(3));
-                this.guiResources[player_id][0] = player_id;
-                this.guiResources[player_id][1] = Integer.parseInt( mc.group(11) + mc.group(12) );
-                this.guiResources[player_id][2] = Integer.parseInt( mc.group(14) + mc.group(15) );
-                this.guiResources[player_id][4] = Integer.parseInt(mc.group(5));
-                this.guiResources[player_id][5] = Integer.parseInt(mc.group(7));
-                this.guiResources[player_id][6] = Integer.parseInt(mc.group(9));
-
-                if (player_id == 0) {
-                    int i = 5;
-                    while (i < 15) {
-                        player_0.add(Integer.parseInt(mc.group(i)));
-                        i = i + 2;
-                    }
-                } else if (player_id == 1) {
-                    int i = 5;
-                    while (i < 15) {
-                        player_1.add(Integer.parseInt(mc.group(i)));
-                        i = i + 2;
-                    }
-                }
-            }
-
-            //ボードの配置
-            else if(text.startsWith("212")){
-                Pattern board_info = Pattern.compile("(212)\\s(.*)\\s([1-6])(-)([1-3])\\s([PAS])\\s([01])");
-                Matcher mc2 = board_info.matcher(str);
-                mc2.find();
-                int i = 3;
-                while(i < 8){
-                    board.add(mc2.group(i));
-                    i++;
-                }
-            }
-
-            //シーズン
-            else if(text.startsWith("213")){
-                Pattern season_info = Pattern.compile("(213)\\s(.*)\\s([1-6])([ab])");
-                Matcher mc3 = season_info.matcher(str);
-                mc3.find();
-                int i = 3;
-                season.add(mc3.group(i)+mc3.group(i+1));
-                this.nowSeason = (mc3.group(i)+mc3.group(i+1));
-            }
-
-            //トレンド
-            else if(text.startsWith("214")){
-                Pattern trend_info = Pattern.compile("(214)\\s(.*)\\s(T)([0-3])");
-                Matcher mc4 = trend_info.matcher(str);
-                mc4.find();
-                int i = 4;
-                trend.add("T" + mc4.group(i));
-                this.nowTrend = ("T" + mc4.group(i));
-            }
-
-            //スコア
-            else if(text.startsWith("215")){
-                Pattern score_info = Pattern.compile("(215)\\s(.*)\\s(T)([1-3])\\s([0-9]+)\\s([0-9]+)");
-                Matcher mc5 = score_info.matcher(str);
-                mc5.find();
-                int i = 4;
-                score.add("T" + mc5.group(i));
-                this.guiResources[0][3] = Integer.parseInt(mc5.group(5));
-                this.guiResources[1][3] = Integer.parseInt(mc5.group(6));
-                while(i < 7) {
-                    i++;
-                    score.add(Integer.parseInt(mc5.group(i)));
-                }
-            }
-            
-            //スタートプレイヤー
-            
-            if(text.startsWith("206")){
-                Pattern opponent_info = Pattern.compile("(206)\\s(.*)\\s(0|1)\\s([PAS])\\s([1-6])(-)([1-3])");
-                Matcher mc6 = opponent_info.matcher(str);
-                mc6.find();
-                int i = 4;
-                while(i < 6){
-                    opponent[i-4] = mc6.group(i);
-                    i++;
-                }
-                
             }
 
             this.jTextPane1.setCaretPosition(document.getLength());
