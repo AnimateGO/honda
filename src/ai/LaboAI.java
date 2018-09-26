@@ -47,30 +47,34 @@ public abstract class LaboAI implements MessageRecevable{
     private int[][] defaultResources;
     private int trendLine;
     private int lastPlayerResourceNo;
+    private int lastMyPlayerResourceNo;
     private boolean[] usedPlace;
     private int idTrend;
     private int i;
     private int[] two_flag;
     private int[] four_flag;
+    private int[] setResource; 
     
   
     public LaboAI(Game game){
-        this.CANPUT_PLACE = new boolean[30][15];
+        this.CANPUT_PLACE = new boolean[50][15];
         this.zemiCount = new int[3];
-        this.resources = new int [10][13];
+        this.resources = new int [50][13];
         this.operateResources = new int[13];
         this.changePlayerFlag = 0;
-        this.ifTrend = new String[10];
+        this.ifTrend = new String[50];
         this.defaultResources = new int[2][13];
         this.evaluation = new int[3];
         this.preEvaluation = new int[3];
         this.result = new int[3];
         this.trendLine = 0;
         this.lastPlayerResourceNo = 0;
+        this.lastMyPlayerResourceNo = 0;
         this.usedPlace = new boolean[15];
         this.idTrend = 0;
         this.two_flag = new int[2];
         this.four_flag = new int[2];
+        this.setResource = new int[13];
         this.i = -1;
     }
     
@@ -265,15 +269,22 @@ public abstract class LaboAI implements MessageRecevable{
     
     //playerID（0,1で指定）して、そのプレイヤーの置ける場所を検索
     public void searchCanputPlace(int[] resources,int depth){
+        System.out.println(resources[4] + " " + resources[5] + " " + resources[6]);
         for(int i = depth * 3; i < (depth * 3 + 3); i++){
-            for(int j = 0; j < 15; j++){
-            CANPUT_PLACE[i][j] = this.canPutWorker(resources, "P", PLACE_NAMES[j]);
+            if(resources[4] > 0 && i % 3 == 0){
+                for(int j = 0; j < 15; j++){
+                CANPUT_PLACE[i][j] = this.canPutWorker(resources, "P", PLACE_NAMES[j]);
+                }
             }
-            for(int j = 0; j < 15; j++){
-            CANPUT_PLACE[i][j] = this.canPutWorker(resources, "A", PLACE_NAMES[j]);
+            if(resources[5] > 0 && i % 3 == 1){
+                for(int j = 0; j < 15; j++){
+                CANPUT_PLACE[i][j] = this.canPutWorker(resources, "A", PLACE_NAMES[j]);
+                }
             }
-            for(int j = 0; j < 15; j++){
-            CANPUT_PLACE[i][j] = this.canPutWorker(resources, "S", PLACE_NAMES[j]);
+            if(resources[6] > 0 && i % 3 == 2){
+                for(int j = 0; j < 15; j++){
+                CANPUT_PLACE[i][j] = this.canPutWorker(resources, "S", PLACE_NAMES[j]);
+                }
             }
             //既に置いてある場所には置かないようにする
             for(int k = 0; k < 15; k++){
@@ -319,6 +330,7 @@ public abstract class LaboAI implements MessageRecevable{
         this.resources[depth][10] = this.currentStartPlayer;
         */
         this.resources[depth] = resources;
+        System.out.print(depth);
         this.ifTrend[depth] = this.trend;
         
     }
@@ -525,7 +537,13 @@ public abstract class LaboAI implements MessageRecevable{
             }
         }
         resources[workerID + 4] += -1;
+        System.out.print("worker : ");
+        System.out.print(workerID + " " + resources[workerID + 4]);
+        System.out.print("\n");
         resources[workerID + 7] += 1;
+        System.out.print("useWorker : ");
+        System.out.print(workerID + " " + resources[workerID + 7]);
+        System.out.print("\n");
         
     }
     
@@ -552,9 +570,9 @@ public abstract class LaboAI implements MessageRecevable{
     public void changeSeason(int[] resource1, int[] resource2,String trend){
         //resource内の使った駒(7～9)を使える駒(4～6)に移行
         for(int i = 4; i < 7; i++){
-            resource1[i] = resource1[i+3];
+            resource1[i] += resource1[i+3];
             resource1[i+3] = 0;
-            resource2[i] = resource2[i+3];
+            resource2[i] += resource2[i+3];
             resource2[i+3] = 0;
         }
         
@@ -652,7 +670,47 @@ public abstract class LaboAI implements MessageRecevable{
                     //置ける場合
                     if(this.CANPUT_PLACE[k][j]){
                         //リソースのセットし直し
-                        this.operateResources = resources;
+                        
+                        /*
+                        System.out.print("this.resources : ");
+                        System.out.print(this.resources[i][0] + " ");
+                        System.out.print(this.resources[i][1] + " ");
+                        System.out.print(this.resources[i][2] + " ");
+                        System.out.print(this.resources[i][3] + " ");
+                        System.out.print(this.resources[i][4] + " ");
+                        System.out.print(this.resources[i][5] + " ");
+                        System.out.print(this.resources[i][6] + " ");
+                        System.out.print(this.resources[i][7] + " ");
+                        System.out.print(this.resources[i][8] + " ");
+                        System.out.print(this.resources[i][9] + "\n");
+                        */
+                        
+                        System.out.print("this.operateResource : ");
+                        System.out.print(this.operateResources[0] + " ");
+                        System.out.print(this.operateResources[1] + " ");
+                        System.out.print(this.operateResources[2] + " ");
+                        System.out.print(this.operateResources[3] + " ");
+                        System.out.print(this.operateResources[4] + " ");
+                        System.out.print(this.operateResources[5] + " ");
+                        System.out.print(this.operateResources[6] + " ");
+                        System.out.print(this.operateResources[7] + " ");
+                        System.out.print(this.operateResources[8] + " ");
+                        System.out.print(this.operateResources[9] + "\n");
+                        
+                        /*
+                        System.out.print("this.setResource : ");
+                        System.out.print(this.setResource[0] + " ");
+                        System.out.print(this.setResource[1] + " ");
+                        System.out.print(this.setResource[2] + " ");
+                        System.out.print(this.setResource[3] + " ");
+                        System.out.print(this.setResource[4] + " ");
+                        System.out.print(this.setResource[5] + " ");
+                        System.out.print(this.setResource[6] + " ");
+                        System.out.print(this.setResource[7] + " ");
+                        System.out.print(this.setResource[8] + " ");
+                        System.out.print(this.setResource[9] + "\n");
+                        */
+
                         //this.operateResources = this.resources[i];
                         
                         //ここで置いた場所によるリソースの変化を計算
@@ -661,13 +719,18 @@ public abstract class LaboAI implements MessageRecevable{
                             case 0:
                                 this.ifplay(this.operateResources, "P", this.PLACE_NAMES[j], this.operateTrend);
                                 this.operateResources[11] = 0;
+                                break;
                             case 1:
                                 this.ifplay(this.operateResources, "A", this.PLACE_NAMES[j], this.operateTrend);
                                 this.operateResources[11] = 1;
+                                break;
                             case 2:
                                 this.ifplay(this.operateResources, "S", this.PLACE_NAMES[j], this.operateTrend);
                                 this.operateResources[11] = 2;
+                                break;
                         }
+
+                        
                         //置いた場所を保存
                         this.operateResources[12] = j;
                         //置いた場所の番号を保存→これより深い場所でのsearchCanputPlaceで探さないように
@@ -681,6 +744,9 @@ public abstract class LaboAI implements MessageRecevable{
                                 this.operateResources[0] += 1;
                             }else if(this.confirmHasWorker(this.resources[i-1]) == 0){
                                 this.changeSeason(this.operateResources,this.resources[this.lastPlayerResourceNo],this.operateTrend);
+                                System.out.print("workers : ");
+                                System.out.print(resources[4] + " " + resources[5] + " " + resources[6]);
+                                System.out.print("\n");
                             }
                         }
                         
@@ -724,21 +790,74 @@ public abstract class LaboAI implements MessageRecevable{
                 this.operateResources = this.resources[this.lastPlayerResourceNo];
             }
             //評価関数
-            this.result[0] = this.operateResources[3];
+            this.result[0] = this.operateResources[1];
+            
+            this.operateResources = this.resources[this.lastPlayerResourceNo - 1];
+            
+            
             //既にthis.evaluationに値が入っていた時(多分0以上)はthis.evaluationと値を比較して、新しいほうが小さかったら評価値を-1にしてそこの探索を終了する
             if(this.result[0] < this.evaluation[0]){
                 this.result[0] = -1;
             }
+            
         }else{
             //それ以外の時は下から持ってきた評価を返す
             this.result = this.evaluation;
             
         }
+        
+        
+        
         //この深さでの置く駒の種類と置く場所を保存
         //this.result[1] = this.operateResources[11];
         //this.result[2] = this.operateResources[12];
         this.result[1] = resources[11];
         this.result[2] = resources[12];
+        System.out.print("this.operateResource : ");
+        System.out.print(this.operateResources[0] + " ");
+        System.out.print(this.operateResources[1] + " ");
+        System.out.print(this.operateResources[2] + " ");
+        System.out.print(this.operateResources[3] + " ");
+        System.out.print(this.operateResources[4] + " ");
+        System.out.print(this.operateResources[5] + " ");
+        System.out.print(this.operateResources[6] + " ");
+        System.out.print(this.operateResources[7] + " ");
+        System.out.print(this.operateResources[8] + " ");
+        System.out.print(this.operateResources[9] + "\n");
+        /*
+        System.out.print("this.setResource : ");
+        System.out.print(this.setResource[0] + " ");
+        System.out.print(this.setResource[1] + " ");
+        System.out.print(this.setResource[2] + " ");
+        System.out.print(this.setResource[3] + " ");
+        System.out.print(this.setResource[4] + " ");
+        System.out.print(this.setResource[5] + " ");
+        System.out.print(this.setResource[6] + " ");
+        System.out.print(this.setResource[7] + " ");
+        System.out.print(this.setResource[8] + " ");
+        System.out.print(this.setResource[9] + "\n");
+        */
+        
+        /*
+        for(int a = 0; a < 10; a++){
+            System.out.print("this.allResource : ");
+            System.out.print(this.resources[a][0] + " ");
+            System.out.print(this.resources[a][1] + " ");
+            System.out.print(this.resources[a][2] + " ");
+            System.out.print(this.resources[a][3] + " ");
+            System.out.print(this.resources[a][4] + " ");
+            System.out.print(this.resources[a][5] + " ");
+            System.out.print(this.resources[a][6] + " ");
+            System.out.print(this.resources[a][7] + " ");
+            System.out.print(this.resources[a][8] + " ");
+            System.out.print(this.resources[a][9] + "\n");
+        }
+        */
+                        
+                        
+                        
+        
+        System.out.print("result : ");
         System.out.print(this.result[0] + " ");
         System.out.print(this.result[1] + " ");
         System.out.print(this.result[2] + "\n");

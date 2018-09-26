@@ -47,7 +47,7 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
     ArrayList season = new ArrayList();
     ArrayList trend = new ArrayList();
     ArrayList score = new ArrayList();
-    String[] opponent = new String[3];
+    String[] opponent = new String[4];
     int[] returnResult = new int[3];
     String returnWorker;
     String returnPlace;
@@ -58,6 +58,18 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
     String nowTrend;
     String nowSeason;
     int depth = 5;
+    int[] flag1a = new int[5];
+    int[] flag1b = new int[5];
+    int[] flag2a = new int[10];
+    int[] flag2b = new int[10];
+    int[] flag3a = new int[10];
+    int[] flag3b = new int[10];
+    int[] flag4a = new int[10];
+    int[] flag4b = new int[10];
+    int[] flag5a = new int[10];
+    int[] flag5b = new int[10];
+    int[] flag6a = new int[15];
+    int[] flag6b = new int[15];
 
     /**
      * コンストラクタ　文字の表示部分のみを初期化する
@@ -330,11 +342,11 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                 this.guiResources[player_id][4] = Integer.parseInt(mc.group(5));
                 this.guiResources[player_id][5] = Integer.parseInt(mc.group(7));
                 this.guiResources[player_id][6] = Integer.parseInt(mc.group(9));
-                System.out.print(this.guiResources[player_id][0]);
-                System.out.print(this.guiResources[player_id][1]);
-                System.out.print(this.guiResources[player_id][2]);
-                System.out.print(this.guiResources[player_id][4]);
-                System.out.print(this.guiResources[player_id][5]);
+                System.out.print(this.guiResources[player_id][0] + " ");
+                System.out.print(this.guiResources[player_id][1] + " ");
+                System.out.print(this.guiResources[player_id][2] + " ");
+                System.out.print(this.guiResources[player_id][4] + " ");
+                System.out.print(this.guiResources[player_id][5] + " ");
                 System.out.print(this.guiResources[player_id][6] + "\n");
                 /*
                 if (player_id == 0) {
@@ -408,40 +420,51 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                 Pattern opponent_info = Pattern.compile("(206)\\s(.*)\\s(0|1)\\s([PAS])\\s([1-6])(-)([1-3])");
                 Matcher mc6 = opponent_info.matcher(str);
                 mc6.find();
-                int i = 5;
+                int i = 4;
                 while(i < 8){
-                    opponent[i-5] = mc6.group(i);
+                    opponent[i-4] = mc6.group(i);
                     i++;
                 }
                 int j = 0;
                 while(j < 15){
-                    if(PLACE_NAMES[j].equals(opponent[0] + opponent[1] + opponent[2])){
+                    if(PLACE_NAMES[j].equals(opponent[1] + opponent[2] + opponent[3])){
                         this.usedPlaceCase[j] = true;
                     }
                     
                     j++;
                 }
-                System.out.println(opponent[0] + opponent[1] + opponent[2]);
-                if("2-1".equals(opponent[0] + opponent[1] + opponent[2])){
+                System.out.println(opponent[1] + opponent[2] + opponent[3]);
+                if("2-1".equals(opponent[1] + opponent[2] + opponent[3])){
                     this.two_flag[0] = 1;
                 }
                 
-                if("2-2".equals(opponent[0] + opponent[1] + opponent[2])){
+                if("2-2".equals(opponent[1] + opponent[2] + opponent[3])){
                     this.two_flag[1] = 1;
                 }
                 
-                if("4-1".equals(opponent[0] + opponent[1] + opponent[2])){
+                if("4-1".equals(opponent[1] + opponent[2] + opponent[3])){
                     this.four_flag[0] = 1;
                 }
                 
-                if("4-2".equals(opponent[0] + opponent[1] + opponent[2])){
+                if("4-2".equals(opponent[1] + opponent[2] + opponent[3])){
                     this.four_flag[1] = 1;
+                }
+                
+                if("P".equals(opponent[0])){
+                    this.guiResources[(this.myPlayerID + 1) % 2][7] += 1;
+                }
+                
+                if("A".equals(opponent[0])){
+                    this.guiResources[(this.myPlayerID + 1) % 2][8] += 1;
+                }
+                
+                if("S".equals(opponent[0])){
+                    this.guiResources[(this.myPlayerID + 1) % 2][9] += 1;
                 }
                 
                 this.myAI.addUsedPlace(this.usedPlaceCase);
                 this.myAI.setTwo_Flags(this.two_flag);
                 this.myAI.setFour_Flags(this.four_flag);
-                System.out.println(this.two_flag[0]);
             }
             
             if(text.startsWith("207")){
@@ -449,6 +472,13 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                 this.two_flag[1] = 0;
                 this.four_flag[0] = 0;
                 this.four_flag[1] = 0;
+                
+                this.guiResources[0][7] = 0;
+                this.guiResources[0][8] = 0;
+                this.guiResources[0][9] = 0;
+                this.guiResources[1][7] = 0;
+                this.guiResources[1][8] = 0;
+                this.guiResources[1][9] = 0;
                 
                 int j = 0;
                 while(j < 15){
@@ -458,6 +488,468 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
             }
             
             if(text.startsWith("202")){
+                String sendRanText = null;
+                if("1a".equals(this.nowSeason)){
+                        if(flag1a[0] == 0){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 5-1";
+                            flag1a[0] = 1;
+                        }else if(flag1a[0] == 1 && flag1a[1] == 0){
+                            sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                            flag1a[1] = 1;
+                        }else if(flag1a[1] == 1 && flag1a[2] == 0){
+                            sendRanText = "205 PLAY " + myPlayerID +" S 2-2";
+                            flag1a[2] = 1;
+                        }else if(flag1a[2] == 1 && flag1a[3] == 0){
+                            sendRanText = "205 PLAY " + myPlayerID +" S 2-3";
+                            flag1a[3] = 1;
+                        }else if(flag1a[3] == 1 && flag1a[4] == 0){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 2-3";
+                            flag1a[4] = 1;
+                        } 
+                    this.sendMessage(sendRanText);
+                }else if("1b".equals(this.nowSeason)){
+                    //if(this.guiResources[myPlayerID][1] < 5){
+                        if(flag1b[0] == 0){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 5-2";
+                            flag1b[0] = 1;
+                        }else if(flag1b[0] == 1 && flag1b[1] == 0){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 5-1";
+                            flag1b[1] = 1;
+                        }else if(flag1b[1] == 1 && flag1b[2] == 0){
+                            if(this.guiResources[myPlayerID][1] > this.guiResources[(myPlayerID+1)%2][1]){
+                                sendRanText = "205 PLAY " + myPlayerID +" S 3-1";
+                                flag1b[2] = 1;
+                            }else{
+                                sendRanText = "205 PLAY " + myPlayerID +" S 1-1";
+                                flag1b[2] = 1;
+                            }
+                        }
+                        this.sendMessage(sendRanText);
+                    //}
+                }else if("2a".equals(this.nowSeason)){
+                    if(flag2a[0] == 0){
+                        if(this.guiResources[myPlayerID][1] < 5){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 5-2";
+                            flag2a[0] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                            flag2a[0] = 1;
+                        }
+                    }else if(flag2a[0] == 1 && flag2a[1] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-2";
+                        flag2a[1] = 1;
+                    }else if(flag2a[1] == 1 && flag2a[2] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-2";
+                        flag2a[2] = 1;
+                    }else if(flag2a[2] == 1 && flag2a[3] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-3";
+                        flag2a[3] = 1;
+                    }else if(flag2a[3] == 1 && flag2a[4] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-3";
+                        flag2a[4] = 1;
+                    }
+                    this.sendMessage(sendRanText);
+                }else if("2b".equals(this.nowSeason)){
+                    if(flag2b[0] == 0){
+                        if(this.guiResources[myPlayerID][1] < 5){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 5-2";
+                            flag2b[0] = 1;
+                        }else if(this.guiResources[myPlayerID][2] >= 8){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 4-1";
+                            flag2b[0] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                            flag2b[0] = 1;
+                        }
+                    }else if(flag2b[0] == 1 && flag2b[1] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                        flag2b[1] = 1;
+                    }else if(flag2b[1] == 1 && flag2b[2] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-2";
+                        flag2b[2] = 1;
+                    }else if(flag2b[2] == 1 && flag2b[3] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-2";
+                        flag2b[3] = 1;
+                    }else if(flag2b[3] == 1 && flag2b[4] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-3";
+                        flag2b[4] = 1;
+                    }else if(flag2b[4] == 1 && flag2b[5] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-3";
+                        flag2b[5] = 1;
+                    }else if(flag2b[5] == 1 && flag2b[6] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 1-1";
+                        flag2b[6] = 1;
+                    }else if(flag2b[6] == 1 && flag2b[7] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 1-1";
+                        flag2b[2] = 1;
+                    }
+                    this.sendMessage(sendRanText);
+                    
+                }else if("3a".equals(this.nowSeason)){
+                    if(flag3a[0] == 0){
+                        if(this.guiResources[myPlayerID][1] < 5){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 5-2";
+                            flag3a[0] = 1;
+                        }else if(this.guiResources[myPlayerID][2] >= 8){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 4-1";
+                            flag3a[0] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                            flag3a[0] = 1;
+                        }
+                    }else if(flag3a[0] == 1 && flag3a[1] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                        flag3a[1] = 1;
+                    }else if(flag3a[1] == 1 && flag3a[2] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-2";
+                        flag3a[2] = 1;
+                    }else if(flag3a[2] == 1 && flag3a[3] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-2";
+                        flag3a[3] = 1;
+                    }else if(flag3a[3] == 1 && flag3a[4] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-3";
+                        flag3a[4] = 1;
+                    }else if(flag3a[4] == 1 && flag3a[5] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-3";
+                        flag3a[5] = 1;
+                    }else if(flag3a[5] == 1 && flag3a[6] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 1-1";
+                        flag3a[6] = 1;
+                    }else if(flag3a[6] == 1 && flag3a[7] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 1-1";
+                        flag3a[2] = 1;
+                    }
+                    this.sendMessage(sendRanText);
+                    
+                }else if("3b".equals(this.nowSeason)){
+                    if(flag3b[0] == 0){
+                        if(this.guiResources[myPlayerID][1] < 5){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 5-2";
+                            flag3b[0] = 1;
+                        }else if(this.guiResources[myPlayerID][2] >= 8){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 4-1";
+                            flag3b[0] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                            flag3b[0] = 1;
+                        }
+                    }else if(flag3b[0] == 1 && flag3b[1] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                        flag3b[1] = 1;
+                    }else if(flag3b[1] == 1 && flag3b[2] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-2";
+                        flag3b[2] = 1;
+                    }else if(flag3b[2] == 1 && flag3b[3] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-2";
+                        flag3b[3] = 1;
+                    }else if(flag3b[3] == 1 && flag3b[4] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-3";
+                        flag3b[4] = 1;
+                    }else if(flag3b[4] == 1 && flag3b[5] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-3";
+                        flag3b[5] = 1;
+                    }else if(flag3b[5] == 1 && flag3b[6] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 1-1";
+                        flag3b[6] = 1;
+                    }else if(flag3b[6] == 1 && flag3b[7] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 1-1";
+                        flag3b[2] = 1;
+                    }
+                    this.sendMessage(sendRanText);
+                    
+                }else if("4a".equals(this.nowSeason)){
+                    if(flag4a[0] == 0){
+                        if(this.guiResources[myPlayerID][1] < 5){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 5-2";
+                            flag4a[0] = 1;
+                        }else if(this.guiResources[myPlayerID][2] >= 8){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 4-1";
+                            flag4a[0] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                            flag4a[0] = 1;
+                        }
+                    }else if(flag4a[0] == 1 && flag4a[1] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                        flag4a[1] = 1;
+                    }else if(flag4a[1] == 1 && flag4a[2] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-2";
+                        flag4a[2] = 1;
+                    }else if(flag4a[2] == 1 && flag4a[3] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-2";
+                        flag4a[3] = 1;
+                    }else if(flag4a[3] == 1 && flag4a[4] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-3";
+                        flag4a[4] = 1;
+                    }else if(flag4a[4] == 1 && flag4a[5] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-3";
+                        flag4a[5] = 1;
+                    }else if(flag4a[5] == 1 && flag4a[6] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 1-1";
+                        flag4a[6] = 1;
+                    }else if(flag4a[6] == 1 && flag4a[7] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 1-1";
+                        flag4a[2] = 1;
+                    }
+                    
+                    this.sendMessage(sendRanText);
+                
+                }else if("4b".equals(this.nowSeason)){
+                    if(flag4b[0] == 0){
+                        if(this.guiResources[myPlayerID][1] < 5){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 5-2";
+                            flag4b[0] = 1;
+                        }else if(this.guiResources[myPlayerID][2] >= 8){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 4-1";
+                            flag4b[0] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                            flag4b[0] = 1;
+                        }
+                    }else if(flag4b[0] == 1 && flag4b[1] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                        flag4b[1] = 1;
+                    }else if(flag4b[1] == 1 && flag4b[2] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-2";
+                        flag4b[2] = 1;
+                    }else if(flag4b[2] == 1 && flag4b[3] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-2";
+                        flag4b[3] = 1;
+                    }else if(flag4b[3] == 1 && flag4b[4] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-3";
+                        flag4b[4] = 1;
+                    }else if(flag4b[4] == 1 && flag4b[5] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-3";
+                        flag4b[5] = 1;
+                    }else if(flag4b[5] == 1 && flag4b[6] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 1-1";
+                        flag4b[6] = 1;
+                    }else if(flag4b[6] == 1 && flag4b[7] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 1-1";
+                        flag4b[2] = 1;
+                    }
+                    this.sendMessage(sendRanText);
+                    
+                }else if("5a".equals(this.nowSeason)){
+                    if(flag5a[0] == 0){
+                        if(this.guiResources[myPlayerID][1] < 5){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 5-2";
+                            flag5a[0] = 1;
+                        }else if(this.guiResources[myPlayerID][2] >= 8){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 4-1";
+                            flag5a[0] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                            flag5a[0] = 1;
+                        }
+                    }else if(flag5a[0] == 1 && flag5a[1] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                        flag5a[1] = 1;
+                    }else if(flag5a[1] == 1 && flag5a[2] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-2";
+                        flag5a[2] = 1;
+                    }else if(flag5a[2] == 1 && flag5a[3] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-2";
+                        flag5a[3] = 1;
+                    }else if(flag5a[3] == 1 && flag5a[4] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-3";
+                        flag5a[4] = 1;
+                    }else if(flag5a[4] == 1 && flag5a[5] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-3";
+                        flag5a[5] = 1;
+                    }else if(flag5a[5] == 1 && flag5a[6] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 1-1";
+                        flag5a[6] = 1;
+                    }else if(flag5a[6] == 1 && flag5a[7] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 1-1";
+                        flag5a[2] = 1;
+                    }
+                    this.sendMessage(sendRanText);
+                    
+                    
+                }else if("5b".equals(this.nowSeason)){
+                    if(flag5b[0] == 0){
+                        if(this.guiResources[myPlayerID][1] < 5){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 5-2";
+                            flag5b[0] = 1;
+                        }else if(this.guiResources[myPlayerID][2] >= 8){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 4-1";
+                            flag5b[0] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                            flag5b[0] = 1;
+                        }
+                    }else if(flag5b[0] == 1 && flag5b[1] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                        flag5b[1] = 1;
+                    }else if(flag5b[1] == 1 && flag5b[2] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-2";
+                        flag5b[2] = 1;
+                    }else if(flag5b[2] == 1 && flag5b[3] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-2";
+                        flag5b[3] = 1;
+                    }else if(flag5b[3] == 1 && flag5b[4] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 2-3";
+                        flag5b[4] = 1;
+                    }else if(flag5b[4] == 1 && flag5b[5] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 2-3";
+                        flag5b[5] = 1;
+                    }else if(flag5b[5] == 1 && flag5b[6] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 1-1";
+                        flag5b[6] = 1;
+                    }else if(flag5b[6] == 1 && flag5b[7] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 1-1";
+                        flag5b[2] = 1;
+                    }
+                    this.sendMessage(sendRanText);
+                    
+                }else if("6a".equals(this.nowSeason)){
+                    if(flag6a[0] == 0){
+                        if(this.guiResources[myPlayerID][2] >= 8){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 4-1";
+                            flag6a[0] = 1;
+                        }
+                    }else if(flag6a[0] == 1 && flag6a[1] == 0){
+                        if(this.guiResources[myPlayerID][2] >= 8){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 4-2";
+                            flag6a[1] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 5-1";
+                            flag6a[1] = 1;
+                        }
+                    }else if(flag6a[1] == 1 && flag6a[2] == 0){
+                        if(this.guiResources[myPlayerID][2] >= 8){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 3-3";
+                            flag6a[2] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 5-1";
+                            flag6a[2] = 1;
+                        }
+                    }else if(flag6a[2] == 1 && flag6a[3] == 0){
+                        if(this.guiResources[myPlayerID][2] >= 5 && this.guiResources[myPlayerID][1] >= 2){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 5-1";
+                            flag6a[3] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 5-1";
+                            flag6a[3] = 1;
+                        }
+                    }else if(flag6a[3] == 1 && flag6a[4] == 0){
+                        if(this.guiResources[myPlayerID][1] >= 4){
+                            sendRanText = "205 PLAY " + myPlayerID +" S 2-1";
+                            flag6a[4] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 5-1";
+                            flag6a[4] = 1;
+                        }
+                    }else if(flag6a[4] == 1 && flag6a[5] == 0){
+                        if(this.guiResources[myPlayerID][1] >= 4){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 2-1";
+                            flag6a[5] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 5-1";
+                            flag6a[5] = 1;
+                        }
+                    }else if(flag6a[5] == 1 && flag6a[6] == 0){
+                        if(this.guiResources[myPlayerID][1] >= 4){
+                            sendRanText = "205 PLAY " + myPlayerID +" S 2-2";
+                            flag6a[6] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 5-1";
+                            flag6a[6] = 1;
+                        }
+                    }else if(flag6a[6] == 1 && flag6a[7] == 0){
+                        if(this.guiResources[myPlayerID][1] >= 4){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 2-2";
+                            flag6a[7] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 5-1";
+                            flag6a[7] = 1;
+                        }
+                    }else if(flag6a[7] == 1 && flag6a[8] == 0){
+                        if(this.guiResources[myPlayerID][1] >= 4){
+                            sendRanText = "205 PLAY " + myPlayerID +" S 2-3";
+                            flag6a[8] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 5-1";
+                            flag6a[8] = 1;
+                        }
+                    }else if(flag6a[8] == 1 && flag6a[9] == 0){
+                        if(this.guiResources[myPlayerID][1] >= 4){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 2-3";
+                            flag6a[9] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 5-1";
+                            flag6a[9] = 1;
+                        }
+                    }else if(flag6a[9] == 1 && flag6a[10] == 0){
+                        if(this.guiResources[myPlayerID][1] >= 4){
+                            sendRanText = "205 PLAY " + myPlayerID +" P 2-2";
+                            flag6a[10] = 1;
+                        }else{
+                            sendRanText = "205 PLAY " + myPlayerID +" S 5-1";
+                            flag6a[10] = 1;
+                        }
+                    }else if(flag6a[10] == 1 && flag6a[11] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 5-1";
+                        flag6a[11] = 1;
+                    }else if(flag6a[11] == 1 && flag6a[12] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 1-1";
+                        flag6a[12] = 1;
+                    }else if(flag6a[12] == 1 && flag6a[13] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 1-1";
+                        flag6a[13] = 1;
+                    }
+                    this.sendMessage(sendRanText);
+                    
+                }else if("6b".equals(this.nowSeason)){
+                    if(flag6b[0] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 4-1";
+                        flag6b[0] = 1;
+                    }else if(flag6b[0] == 1 && flag6b[1] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 4-2";
+                        flag6b[1] = 1;
+                    }else if(flag6b[1] == 1 && flag6b[2] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 3-3";
+                        flag6b[2] = 1;
+                    }else if(flag6b[2] == 1 && flag6b[3] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 4-3";
+                        flag6b[3] = 1;
+                    }else if(flag6b[3] == 1 && flag6b[4] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 4-1";
+                        flag6b[4] = 1;
+                    }else if(flag6b[4] == 1 && flag6b[5] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 4-2";
+                        flag6b[5] = 1;
+                    }else if(flag6b[5] == 1 && flag6b[6] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 3-3";
+                        flag6b[6] = 1;
+                    }else if(flag6b[6] == 1 && flag6b[7] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 3-2";
+                        flag6b[7] = 1;
+                    }else if(flag6b[7] == 1 && flag6b[8] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 4-3";
+                        flag6b[8] = 1;
+                    }else if(flag6b[8] == 1 && flag6b[9] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 3-2";
+                        flag6b[9] = 1;
+                    }else if(flag6b[9] == 1 && flag6b[10] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 3-1";
+                        flag6b[10] = 1;
+                    }else if(flag6b[10] == 1 && flag6b[11] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 3-1";
+                        flag6b[11] = 1;
+                    }else if(flag6b[11] == 1 && flag6b[12] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" P 1-1";
+                        flag6b[12] = 1;
+                    }else if(flag6b[12] == 1 && flag6b[13] == 0){
+                        sendRanText = "205 PLAY " + myPlayerID +" S 1-1";
+                        flag6b[13] = 1;
+                    }
+                    this.sendMessage(sendRanText);
+                    
+                }else{
+                
+                    
                 //探索
                 this.returnResult = this.myAI.search(depth, myPlayerID, this.guiResources[myPlayerID], this.guiResources[myPlayerID], this.guiResources[(myPlayerID + 1) % 2], myPlayerID);
                 //駒の取り出し
@@ -483,6 +975,79 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                     this.four_flag[1] = 1;
                 }
                 
+                if("P".equals(this.returnWorker)){
+                    this.guiResources[myPlayerID][7] += 1;
+                }
+                
+                if("A".equals(this.returnWorker)){
+                    this.guiResources[myPlayerID][8] += 1;
+                }
+                
+                if("S".equals(this.returnWorker)){
+                    this.guiResources[myPlayerID][9] += 1;
+                }
+                
+                
+                //5-3に置くときだけはトレンドの指定が必要（トレンドは固定にする。というか面倒でそれしか実装できんかった）
+                if("5-3".equals(this.returnPlace)){
+                    sendRanText = "205 PLAY " + myPlayerID + " " + this.returnWorker + " 5-3 T1";
+                }else{
+                    sendRanText = "205 PLAY " + myPlayerID + " " + this.returnWorker + " " + this.returnPlace;
+                }
+                this.sendMessage(sendRanText);
+                
+                this.myAI.lisetAI();
+                
+                    
+                }
+            
+            
+                //探索して失敗したとき
+                if(text.startsWith("401")){
+                    
+                }
+                
+                
+                
+                /*
+                
+                //探索
+                this.returnResult = this.myAI.search(depth, myPlayerID, this.guiResources[myPlayerID], this.guiResources[myPlayerID], this.guiResources[(myPlayerID + 1) % 2], myPlayerID);
+                //駒の取り出し
+                this.returnWorker = this.WORKER_NAMES[this.returnResult[1]];
+                //場所の取り出し
+                this.returnPlace = this.PLACE_NAMES[this.returnResult[2]];
+                
+                this.usedPlaceCase[this.returnResult[2]] = true;
+                
+                if("2-1".equals(this.returnPlace)){
+                    this.two_flag[0] = 1;
+                }
+                
+                if("2-2".equals(this.returnPlace)){
+                    this.two_flag[1] = 1;
+                }
+                
+                if("4-1".equals(this.returnPlace)){
+                    this.four_flag[0] = 1;
+                }
+                
+                if("4-2".equals(this.returnPlace)){
+                    this.four_flag[1] = 1;
+                }
+                
+                if("P".equals(this.returnWorker)){
+                    this.guiResources[myPlayerID][7] += 1;
+                }
+                
+                if("A".equals(this.returnWorker)){
+                    this.guiResources[myPlayerID][8] += 1;
+                }
+                
+                if("S".equals(this.returnWorker)){
+                    this.guiResources[myPlayerID][9] += 1;
+                }
+                
                 
                 //5-3に置くときだけはトレンドの指定が必要（トレンドは固定にする。というか面倒でそれしか実装できんかった）
                 String sendRanText;
@@ -494,8 +1059,8 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                 this.sendMessage(sendRanText);
                 
                 this.myAI.lisetAI();
+                */
             }
-
             this.jTextPane1.setCaretPosition(document.getLength());
         } catch (BadLocationException ex) {
             Logger.getLogger(ClientGUI.class.getName()).log(Level.SEVERE, null, ex);
