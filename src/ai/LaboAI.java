@@ -33,30 +33,25 @@ public abstract class LaboAI implements MessageRecevable{
     
     public Board board;
     
-    private int[] money;
-    private int[] reserchPoint;
-    private int[] currentScore;
-    private int[][] workerList; 
-    private int[][] usedWorkerList;
+ 
     private int[] zemiCount;
-    private int currentStartPlayer;
     private int changePlayerFlag;
     private String trend;
     private String[] ifTrend;
     private int[][] resources;
     private int[] operateResources;
     private String operateTrend;
-    private int[][] evaluationList;
     private int[] evaluation;
     private int[] preEvaluation;
-    private int[] result;
+    public int[] result;
     private int[][] defaultResources;
     private int trendLine;
     private int lastPlayerResourceNo;
-    private int myPlayerID;
     private boolean[] usedPlace;
     private int idTrend;
     private int i;
+    private int[] two_flag;
+    private int[] four_flag;
     
   
     public LaboAI(Game game){
@@ -64,7 +59,6 @@ public abstract class LaboAI implements MessageRecevable{
         this.zemiCount = new int[3];
         this.resources = new int [10][13];
         this.operateResources = new int[13];
-        this.currentStartPlayer = 0;
         this.changePlayerFlag = 0;
         this.ifTrend = new String[10];
         this.defaultResources = new int[2][13];
@@ -75,6 +69,83 @@ public abstract class LaboAI implements MessageRecevable{
         this.lastPlayerResourceNo = 0;
         this.usedPlace = new boolean[15];
         this.idTrend = 0;
+        this.two_flag = new int[2];
+        this.four_flag = new int[2];
+        this.i = -1;
+    }
+    
+    public void lisetAI(){
+        //this.CANPUT_PLACE = new boolean[30][15];
+        for(int i = 0; i < 30; i++){
+            for(int j = 0; j < 15; j++){
+                this.CANPUT_PLACE[i][j] = false;
+            }
+        }
+        //this.zemiCount = new int[3];
+        //this.zemiCount[0] = 0;
+        //this.zemiCount[1] = 0;
+        //this.zemiCount[2] = 0;
+        
+        //this.resources = new int [10][13];
+        for(int i = 0; i < 10; i++){
+            for(int j = 0; j < 13; j++){
+                this.resources[i][j] = 0;
+            }
+        }
+        
+        //this.operateResources = new int[13];
+        for(int i = 0; i < 13; i++){
+            this.operateResources[i] = 0;
+        }
+        
+        this.changePlayerFlag = 0;
+        
+        //this.ifTrend = new String[10];
+        for(int i = 0; i < 10; i++){
+            this.ifTrend[i] = null;
+        }
+        
+        //this.defaultResources = new int[2][13];
+        for(int i = 0; i < 2; i++){
+            for(int j = 0; j < 13; j++){
+                this.defaultResources[i][j] = 0;
+            }
+        }
+        
+        //this.evaluation = new int[3];
+        this.evaluation[0] = 0;
+        this.evaluation[1] = 0;
+        this.evaluation[2] = 0;
+        
+        //this.preEvaluation = new int[3];
+        this.preEvaluation[0] = 0;
+        this.preEvaluation[1] = 0;
+        this.preEvaluation[2] = 0;
+        
+        //this.result = new int[3];
+        this.result[0] = 0;
+        this.result[1] = 0;
+        this.result[2] = 0;
+        
+        this.trendLine = 0;
+        
+        this.lastPlayerResourceNo = 0;
+        
+        //this.usedPlace = new boolean[15];
+        for(int i = 0; i < 15; i++){
+            this.usedPlace[i] = false;
+        }
+        
+        this.idTrend = 0;
+        
+        //this.two_flag = new int[2];
+        this.two_flag[0] = 0;
+        this.two_flag[1] = 0;
+        
+        //this.four_flag = new int[2];
+        this.four_flag[0] = 0;
+        this.four_flag[1] = 0;
+        
         this.i = -1;
     }
     public abstract void getNewMessage(String message);
@@ -94,11 +165,19 @@ public abstract class LaboAI implements MessageRecevable{
     public boolean canPutWorker(int[] resources,String typeOfWorker,String place){
         if(place.startsWith("2")){
             if(resources[1] >= 2){
-                return true;
+                if(place.equals("2-1") && this.two_flag[0] == 0){
+                    return true;
+                }else if(place.equals("2-2") && this.two_flag[0] == 1 && this.two_flag[1] == 0){
+                    return true;
+                }else if(place.equals("2-3") && this.two_flag[0] == 1 && this.two_flag[1] == 1){
+                    return true;
+                }
+                return false;
             } else {
                 return false;
             }
         }
+        
         if(place.equals("3-1")){
             if(resources[2] >= 2){
                 return true;
@@ -122,7 +201,14 @@ public abstract class LaboAI implements MessageRecevable{
         }
         if(place.startsWith("4")){
             if(resources[2] >= 8 && resources[1] >= 1){
-                return true;
+                if(place.equals("4-1") && this.four_flag[0] == 0){
+                    return true;
+                }else if(place.equals("4-2") && this.four_flag[0] == 1 && this.four_flag[1] == 0){
+                    return true;
+                }else if(place.equals("4-3") && this.four_flag[0] == 1 && this.four_flag[1] == 1){
+                    return true;
+                }
+                return false;
             } else {
                 return false;
             }
@@ -130,17 +216,28 @@ public abstract class LaboAI implements MessageRecevable{
         //タイプが問題ないかを確認
         if(place.startsWith("5")){
             if(typeOfWorker.equals("P") || typeOfWorker.equals("A")){
-                return true;
-            } else {
-                return false;
+                if(place.equals("5-1")){
+                    return true;
+                }else if(place.equals("5-2")){
+                    if(resources[2] >= 1){
+                        return true;
+                    }
+                } else if(place.equals("5-3")){
+                    if(resources[2] >= 3){
+                        return true;
+                    }
+                }
             }
+            return false;
         }
+        
         if(place.equals("6-1")){
             if(typeOfWorker.equals("P") || typeOfWorker.equals("A")){
-                return true;
-            } else {
-                return false;
+                if(resources[2] >= 3){
+                    return true;
+                }
             }
+            return false;
         }
         if(place.equals("6-2")){
             if(typeOfWorker.equals("P") && resources[3] >= 10){
@@ -150,6 +247,19 @@ public abstract class LaboAI implements MessageRecevable{
             }
         }
         return false;
+    }
+    
+    //場所を指定して、その場所をusedPlaceに追加する
+    public void addUsedPlace(boolean[] i){
+        this.usedPlace = i;
+    }
+    
+    public void setTwo_Flags(int[] i){
+        this.two_flag = i;
+    }
+    
+    public void setFour_Flags(int[] i){
+        this.four_flag = i;
     }
     
     
@@ -243,8 +353,10 @@ public abstract class LaboAI implements MessageRecevable{
             }
             if(place.equals("2-1")){
                 resources[2] += 3;
+                this.two_flag[0] = 1;
             }else if(place.equals("2-2")){
                 resources[2] += 4;
+                this.two_flag[1] = 1;
             }else if(place.equals("2-3")){
                 resources[2] += 5;
             }
@@ -306,6 +418,7 @@ public abstract class LaboAI implements MessageRecevable{
                 default:
                     break;
             }
+            this.four_flag[0] = 1;
             resources[2] += -8;
             resources[1] += -1;
             //this.workerList[playerID][workerID] += -1;
@@ -325,6 +438,7 @@ public abstract class LaboAI implements MessageRecevable{
                 default:
                     break;
             }
+            this.four_flag[1] = 1;
             resources[2] += -8;
             resources[1] += -1;
             //this.workerList[playerID][workerID] += -1;
@@ -462,6 +576,11 @@ public abstract class LaboAI implements MessageRecevable{
         for(int i = 0; i < 15; i++){
             this.usedPlace[i] = false;
         }
+        
+        this.two_flag[0] = 0;
+        this.two_flag[1] = 0;
+        this.four_flag[0] = 0;
+        this.four_flag[1] = 0;
     }
     
     public void changeTrendLine(int[] resource1, int[] resource2,String trend){
@@ -509,27 +628,35 @@ public abstract class LaboAI implements MessageRecevable{
     }
     
     public int[] search(int depth,int PlayerID, int[] resources, int[] myResources, int[] youResources,int myPlayerID){
-        System.out.print("loopin");
-        //for(int i = 0; i < depth; i++){
+        //playerIDが使うリソースのIDと違う場合→プレイヤーが変わった
         if(PlayerID != resources[0]) {
             resources[0] = PlayerID;
             //ここで前のプレイヤーのリソースが何番目に保存されているかを適当な変数に保存
             this.lastPlayerResourceNo = i;
         }
         i++;
+        //この深さでのリソースを保存
         this.setResource(i, resources);
+        //保存したやつを変化させないように、別でリソースを変化させれるようにする
         this.operateResources = resources;
         this.operateTrend = this.ifTrend[i];
+        //loop1はα-β法でそれ以降探索しないときに抜けるループ
         loop1:
+        //iが-1になったら終わり
+        //木の一番下まで言った場合、iはdepthよりも小さくなるため、このループには入らない
         while(i < depth || i>= 0){
+            //現在のリソースから探索できる場所を取り出す
             this.searchCanputPlace(this.operateResources, i);
             for(int k = i * 3; k < (i * 3) + 3; k++){
                 for(int j = 0; j < 15; j++){
+                    //置ける場合
                     if(this.CANPUT_PLACE[k][j]){
-                        //リソースのセットし直しが必要
-                        this.operateResources = this.resources[i];
+                        //リソースのセットし直し
+                        this.operateResources = resources;
+                        //this.operateResources = this.resources[i];
                         
                         //ここで置いた場所によるリソースの変化を計算
+                        //使った駒の種類を保存
                         switch(k % 3){
                             case 0:
                                 this.ifplay(this.operateResources, "P", this.PLACE_NAMES[j], this.operateTrend);
@@ -541,8 +668,9 @@ public abstract class LaboAI implements MessageRecevable{
                                 this.ifplay(this.operateResources, "S", this.PLACE_NAMES[j], this.operateTrend);
                                 this.operateResources[11] = 2;
                         }
+                        //置いた場所を保存
                         this.operateResources[12] = j;
-                        //使った場所の番号を保存→searchCanputPlaceで探さないように
+                        //置いた場所の番号を保存→これより深い場所でのsearchCanputPlaceで探さないように
                         this.usedPlace[j] = true;
                         
                         //1手前のリソースで動ける駒がいない場合は季節を変更
@@ -562,7 +690,7 @@ public abstract class LaboAI implements MessageRecevable{
                             //スタートプレイヤーが変わっている場合、今プレイしているプレイヤーが先手になる
                             if(this.changePlayerFlag == 1){
                                 this.changePlayerFlag = 0;
-                                this.preEvaluation = this.search(depth - 1,this.operateResources[0] % 2, this.operateResources,myResources,youResources, myPlayerID);
+                                this.preEvaluation = this.search(depth - 1,this.operateResources[0], this.operateResources,myResources,youResources, myPlayerID);
                             }else{
                                 this.preEvaluation = this.search(depth - 1,(this.operateResources[0] + 1) % 2, this.resources[this.lastPlayerResourceNo],myResources,youResources, myPlayerID);
                             }
@@ -591,23 +719,29 @@ public abstract class LaboAI implements MessageRecevable{
         }
         //木の一番下まで到達
         //depthが0の時は評価値を返す
-        //それ以外の時は下から持ってきた評価を返す
         if(depth == 0){
             if(myPlayerID != this.operateResources[0]){
                 this.operateResources = this.resources[this.lastPlayerResourceNo];
             }
-            //既にthis.evaluationに値が入っていた時(多分0以上)はthis.evaluationと値を比較して、新しいほうが小さかったら評価値を-1にしてそこの探索を終了する
             //評価関数
-            this.result[0] = this.operateResources[1];
-            //置く駒の種類と置く場所を保存
-            this.result[1] = this.operateResources[11];
-            this.result[2] = this.operateResources[12];
+            this.result[0] = this.operateResources[3];
+            //既にthis.evaluationに値が入っていた時(多分0以上)はthis.evaluationと値を比較して、新しいほうが小さかったら評価値を-1にしてそこの探索を終了する
             if(this.result[0] < this.evaluation[0]){
                 this.result[0] = -1;
-            }else{
-                this.result = this.evaluation;
             }
+        }else{
+            //それ以外の時は下から持ってきた評価を返す
+            this.result = this.evaluation;
+            
         }
+        //この深さでの置く駒の種類と置く場所を保存
+        //this.result[1] = this.operateResources[11];
+        //this.result[2] = this.operateResources[12];
+        this.result[1] = resources[11];
+        this.result[2] = resources[12];
+        System.out.print(this.result[0] + " ");
+        System.out.print(this.result[1] + " ");
+        System.out.print(this.result[2] + "\n");
         i--;
         return this.result;
     }

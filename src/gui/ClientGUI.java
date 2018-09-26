@@ -37,7 +37,7 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
 
     private String defaultIP;
     private String defaultPort = "18420";
-    
+    String[] WORKER_NAMES = {"P","A","S"};
     String[] PLACE_NAMES = {"1-1","2-1","2-2","2-3","3-1","3-2","3-3","4-1","4-2","4-3","5-1","5-2","5-3","6-1","6-2"};
 
     int myPlayerID;
@@ -52,8 +52,12 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
     String returnWorker;
     String returnPlace;
     int[][] guiResources = new int[2][13];
+    boolean[] usedPlaceCase = new boolean[15];
+    int[] two_flag = new int[2];
+    int[] four_flag = new int[2];
     String nowTrend;
     String nowSeason;
+    int depth = 5;
 
     /**
      * コンストラクタ　文字の表示部分のみを初期化する
@@ -326,9 +330,15 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                 this.guiResources[player_id][4] = Integer.parseInt(mc.group(5));
                 this.guiResources[player_id][5] = Integer.parseInt(mc.group(7));
                 this.guiResources[player_id][6] = Integer.parseInt(mc.group(9));
+                System.out.print(this.guiResources[player_id][0]);
+                System.out.print(this.guiResources[player_id][1]);
+                System.out.print(this.guiResources[player_id][2]);
+                System.out.print(this.guiResources[player_id][4]);
+                System.out.print(this.guiResources[player_id][5]);
+                System.out.print(this.guiResources[player_id][6] + "\n");
                 /*
                 if (player_id == 0) {
-                    int i = 5;
+                    int i = 5; 
                     while (i < 15) {
                         player_0.add(Integer.parseInt(mc.group(i)));
                         i = i + 2;
@@ -384,8 +394,8 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                 mc5.find();
                 int i = 4;
                 score.add("T" + mc5.group(i));
-                this.guiResources[0][3] = Integer.parseInt(mc5.group(5));
-                this.guiResources[1][3] = Integer.parseInt(mc5.group(6));
+                this.guiResources[0][3] += Integer.parseInt(mc5.group(5));
+                this.guiResources[1][3] += Integer.parseInt(mc5.group(6));
                 /*
                 while(i < 7) {
                     i++;
@@ -398,35 +408,92 @@ public class ClientGUI extends javax.swing.JFrame implements MessageRecevable {
                 Pattern opponent_info = Pattern.compile("(206)\\s(.*)\\s(0|1)\\s([PAS])\\s([1-6])(-)([1-3])");
                 Matcher mc6 = opponent_info.matcher(str);
                 mc6.find();
-                int i = 4;
-                while(i < 6){
-                    opponent[i-4] = mc6.group(i);
+                int i = 5;
+                while(i < 8){
+                    opponent[i-5] = mc6.group(i);
                     i++;
+                }
+                int j = 0;
+                while(j < 15){
+                    if(PLACE_NAMES[j].equals(opponent[0] + opponent[1] + opponent[2])){
+                        this.usedPlaceCase[j] = true;
+                    }
+                    
+                    j++;
+                }
+                System.out.println(opponent[0] + opponent[1] + opponent[2]);
+                if("2-1".equals(opponent[0] + opponent[1] + opponent[2])){
+                    this.two_flag[0] = 1;
+                }
+                
+                if("2-2".equals(opponent[0] + opponent[1] + opponent[2])){
+                    this.two_flag[1] = 1;
+                }
+                
+                if("4-1".equals(opponent[0] + opponent[1] + opponent[2])){
+                    this.four_flag[0] = 1;
+                }
+                
+                if("4-2".equals(opponent[0] + opponent[1] + opponent[2])){
+                    this.four_flag[1] = 1;
+                }
+                
+                this.myAI.addUsedPlace(this.usedPlaceCase);
+                this.myAI.setTwo_Flags(this.two_flag);
+                this.myAI.setFour_Flags(this.four_flag);
+                System.out.println(this.two_flag[0]);
+            }
+            
+            if(text.startsWith("207")){
+                this.two_flag[0] = 0;
+                this.two_flag[1] = 0;
+                this.four_flag[0] = 0;
+                this.four_flag[1] = 0;
+                
+                int j = 0;
+                while(j < 15){
+                    this.usedPlaceCase[j] = false;
+                    j++;
                 }
             }
             
             if(text.startsWith("202")){
                 //探索
-                this.returnResult = this.myAI.search(3, myPlayerID, this.guiResources[myPlayerID], this.guiResources[myPlayerID], this.guiResources[(myPlayerID + 1) % 2], myPlayerID);
+                this.returnResult = this.myAI.search(depth, myPlayerID, this.guiResources[myPlayerID], this.guiResources[myPlayerID], this.guiResources[(myPlayerID + 1) % 2], myPlayerID);
                 //駒の取り出し
-                if(this.returnResult[1] == 0){
-                    this.returnWorker = "P";
-                }else if(this.returnResult[1] == 1){
-                    this.returnWorker = "A";
-                }else if(this.returnResult[2] == 2){
-                    this.returnWorker = "S";
-                }
+                this.returnWorker = this.WORKER_NAMES[this.returnResult[1]];
                 //場所の取り出し
                 this.returnPlace = this.PLACE_NAMES[this.returnResult[2]];
                 
+                this.usedPlaceCase[this.returnResult[2]] = true;
+                
+                if("2-1".equals(this.returnPlace)){
+                    this.two_flag[0] = 1;
+                }
+                
+                if("2-2".equals(this.returnPlace)){
+                    this.two_flag[1] = 1;
+                }
+                
+                if("4-1".equals(this.returnPlace)){
+                    this.four_flag[0] = 1;
+                }
+                
+                if("4-2".equals(this.returnPlace)){
+                    this.four_flag[1] = 1;
+                }
+                
+                
                 //5-3に置くときだけはトレンドの指定が必要（トレンドは固定にする。というか面倒でそれしか実装できんかった）
                 String sendRanText;
-                if(this.returnPlace == "5-3"){
+                if("5-3".equals(this.returnPlace)){
                     sendRanText = "205 PLAY " + myPlayerID + " " + this.returnWorker + " 5-3 T1";
                 }else{
                     sendRanText = "205 PLAY " + myPlayerID + " " + this.returnWorker + " " + this.returnPlace;
                 }
                 this.sendMessage(sendRanText);
+                
+                this.myAI.lisetAI();
             }
 
             this.jTextPane1.setCaretPosition(document.getLength());
